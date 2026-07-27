@@ -120,6 +120,13 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
     description: "",
   });
 
+  // ---- Edit states ----
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [editingPackage, setEditingPackage] = useState<any>(null);
+  const [editingInstructor, setEditingInstructor] = useState<any>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
+
+
   useEffect(() => {
     const sessionToken = localStorage.getItem("acp_admin_auth");
     if (sessionToken === "true") {
@@ -423,6 +430,104 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       alert("Silinemedi");
     }
   }
+
+  async function handleUpdateSession(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingSession) return;
+    try {
+      const res = await fetch("/api/admin/sessions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSession),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setSessionsList((prev: any[]) => prev.map((s) => (s.id === editingSession.id ? data.session : s)));
+        setEditingSession(null);
+      } else {
+        alert(data.error || "Güncellenemedi");
+      }
+    } catch (e) {
+      alert("Hata oluştu");
+    }
+  }
+
+  async function handleUpdatePackage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPackage) return;
+    try {
+      const res = await fetch("/api/admin/packages", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingPackage),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPackagesList((prev: any[]) => prev.map((p) => (p.id === editingPackage.id ? data.package : p)));
+        setEditingPackage(null);
+      } else {
+        alert(data.error || "Güncellenemedi");
+      }
+    } catch (e) {
+      alert("Hata oluştu");
+    }
+  }
+
+  async function handleUpdateInstructor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingInstructor) return;
+    try {
+      const res = await fetch("/api/admin/instructors", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingInstructor),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setInstructorsList((prev: any[]) => prev.map((i) => (i.id === editingInstructor.id ? data.instructor : i)));
+        setEditingInstructor(null);
+      } else {
+        alert(data.error || "Güncellenemedi");
+      }
+    } catch (e) {
+      alert("Hata oluştu");
+    }
+  }
+
+  async function handleUpdateMember(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingMember) return;
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingMember.id,
+          fullName: editingMember.fullName,
+          phone: editingMember.phone,
+          email: editingMember.email,
+          packageName: editingMember.packageName,
+          totalSessions: Number(editingMember.totalSessions),
+          remainingSessions: Number(editingMember.remainingSessions),
+          totalPrice: editingMember.totalPrice,
+          paidAmount: editingMember.paidAmount,
+          paymentMethod: editingMember.paymentMethod,
+          paymentStatus: editingMember.paymentStatus,
+          notes: editingMember.notes,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMembersList((prev: any[]) => prev.map((m) => (m.id === editingMember.id ? data.member : m)));
+        setEditingMember(null);
+      } else {
+        alert(data.error || "Güncellenemedi");
+      }
+    } catch (e) {
+      alert("Hata oluştu");
+    }
+  }
+
 
   if (isCheckingAuth) {
     return (
@@ -740,6 +845,33 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             </form>
           )}
 
+          {/* Edit Member Modal */}
+          {editingMember && (
+            <form onSubmit={handleUpdateMember} className="rounded-2xl border border-[#c9a66b]/40 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">&#220;ye D&#252;zenle — {editingMember.fullName}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <input type="text" placeholder="Ad Soyad" required value={editingMember.fullName} onChange={(e) => setEditingMember({ ...editingMember, fullName: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="tel" placeholder="Telefon" value={editingMember.phone || ""} onChange={(e) => setEditingMember({ ...editingMember, phone: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="email" placeholder="E-posta" value={editingMember.email || ""} onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Paket Adı" value={editingMember.packageName || ""} onChange={(e) => setEditingMember({ ...editingMember, packageName: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Toplam Seans" min={1} value={editingMember.totalSessions} onChange={(e) => setEditingMember({ ...editingMember, totalSessions: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Kalan Seans" min={0} value={editingMember.remainingSessions} onChange={(e) => setEditingMember({ ...editingMember, remainingSessions: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Toplam Fiyat (TL)" value={editingMember.totalPrice} onChange={(e) => setEditingMember({ ...editingMember, totalPrice: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Ödenen Tutar (TL)" value={editingMember.paidAmount} onChange={(e) => setEditingMember({ ...editingMember, paidAmount: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <select value={editingMember.paymentMethod} onChange={(e) => setEditingMember({ ...editingMember, paymentMethod: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]">
+                  <option>Kredi Kartı</option>
+                  <option>Havale/EFT</option>
+                  <option>Nakit</option>
+                </select>
+                <textarea placeholder="Notlar" value={editingMember.notes || ""} onChange={(e) => setEditingMember({ ...editingMember, notes: e.target.value })} rows={2} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b] sm:col-span-2" />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setEditingMember(null)} className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white">Vazgeç</button>
+                <button type="submit" className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]">Güncelle</button>
+              </div>
+            </form>
+          )}
+
           {/* Members List Table */}
           <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#0c0c0e]">
             <table className="w-full text-left text-xs sm:text-sm">
@@ -806,7 +938,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                         <p className="text-[#e8e4dc]/60">{m.paymentMethod}</p>
                         {m.notes && <p className="text-[11px] text-[#c9a66b]/80 italic">{m.notes}</p>}
                       </td>
-                      <td className="px-4 py-4 text-right space-x-2">
+                      <td className="px-4 py-4 text-right space-x-1 whitespace-nowrap">
                         <button
                           onClick={() => handleUseSession(m.id)}
                           disabled={m.remainingSessions <= 0}
@@ -823,6 +955,12 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                           className="rounded-full border border-[#c9a66b]/30 bg-[#c9a66b]/10 px-3 py-1 text-xs text-[#c9a66b] transition hover:bg-[#c9a66b]/20"
                         >
                           Tahsilat
+                        </button>
+                        <button
+                          onClick={() => setEditingMember({ ...m })}
+                          className="rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-xs text-blue-300 transition hover:bg-blue-500/20"
+                        >
+                          &#9998; Düzenle
                         </button>
                         <button
                           onClick={() => handleDeleteMember(m.id)}
@@ -1001,6 +1139,29 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             </form>
           )}
 
+          {/* Edit Session Modal */}
+          {editingSession && (
+            <form onSubmit={handleUpdateSession} className="rounded-2xl border border-[#c9a66b]/40 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Seans Düzenle — {editingSession.title}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <input type="text" placeholder="Seans Adı" required value={editingSession.title} onChange={(e) => setEditingSession({ ...editingSession, title: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <select value={editingSession.dayLabel} onChange={(e) => setEditingSession({ ...editingSession, dayLabel: e.target.value, weekday: ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"].indexOf(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]">
+                  {["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"].map(d => <option key={d}>{d}</option>)}
+                </select>
+                <input type="time" value={editingSession.startTime} onChange={(e) => setEditingSession({ ...editingSession, startTime: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="time" value={editingSession.endTime} onChange={(e) => setEditingSession({ ...editingSession, endTime: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Kapasite" min={1} max={20} value={editingSession.capacity} onChange={(e) => setEditingSession({ ...editingSession, capacity: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Lokasyon" value={editingSession.location || ""} onChange={(e) => setEditingSession({ ...editingSession, location: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Seviye" value={editingSession.level || ""} onChange={(e) => setEditingSession({ ...editingSession, level: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <textarea placeholder="Açıklama" value={editingSession.description || ""} onChange={(e) => setEditingSession({ ...editingSession, description: e.target.value })} rows={2} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b] sm:col-span-2" />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setEditingSession(null)} className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white">Vazgeç</button>
+                <button type="submit" className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]">Güncelle</button>
+              </div>
+            </form>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sessionsList.map((item: any) => (
               <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
@@ -1013,13 +1174,9 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                 </div>
                 <p className="text-xs text-[#e8e4dc]/60">Saat: {item.startTime} — {item.endTime}</p>
                 <p className="text-xs text-[#e8e4dc]/50">{item.description}</p>
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleDeleteSession(item.id)}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Seansı Sil
-                  </button>
+                <div className="pt-2 flex justify-end gap-3">
+                  <button onClick={() => setEditingSession({ ...item })} className="text-xs text-[#c9a66b] hover:text-[#d4af37] font-medium">✏ Düzenle</button>
+                  <button onClick={() => handleDeleteSession(item.id)} className="text-xs text-red-400 hover:text-red-300">Sil</button>
                 </div>
               </div>
             ))}
@@ -1111,6 +1268,30 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             </form>
           )}
 
+          {/* Edit Package Modal */}
+          {editingPackage && (
+            <form onSubmit={handleUpdatePackage} className="rounded-2xl border border-[#c9a66b]/40 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Paket Düzenle — {editingPackage.name}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <input type="text" placeholder="Paket Adı" required value={editingPackage.name} onChange={(e) => setEditingPackage({ ...editingPackage, name: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Odak / Etiket" value={editingPackage.focus || ""} onChange={(e) => setEditingPackage({ ...editingPackage, focus: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Fiyat (TL)" value={editingPackage.price} onChange={(e) => setEditingPackage({ ...editingPackage, price: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Seans Sayısı" min={1} value={editingPackage.sessionsCount} onChange={(e) => setEditingPackage({ ...editingPackage, sessionsCount: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Geçerlilik (gün)" min={1} value={editingPackage.durationDays} onChange={(e) => setEditingPackage({ ...editingPackage, durationDays: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <textarea placeholder="Açıklama" value={editingPackage.description || ""} onChange={(e) => setEditingPackage({ ...editingPackage, description: e.target.value })} rows={2} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b] sm:col-span-2" />
+                <input type="text" placeholder="İçerik (virgülle ayırın)" value={Array.isArray(editingPackage.includes) ? editingPackage.includes.join(", ") : (editingPackage.includes || "")} onChange={(e) => setEditingPackage({ ...editingPackage, includes: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b] sm:col-span-2" />
+                <label className="flex items-center gap-2 text-sm text-white/70 col-span-full">
+                  <input type="checkbox" checked={!!editingPackage.isPopular} onChange={(e) => setEditingPackage({ ...editingPackage, isPopular: e.target.checked })} className="rounded" />
+                  Popüler paket olarak işaretle
+                </label>
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setEditingPackage(null)} className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white">Vazgeç</button>
+                <button type="submit" className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]">Güncelle</button>
+              </div>
+            </form>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {packagesList.map((item: any) => (
               <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
@@ -1119,13 +1300,9 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                 <p className="font-serif text-3xl font-light text-[#c9a66b]">{Number(item.price).toLocaleString("tr-TR")} TL</p>
                 <p className="text-xs text-[#e8e4dc]/50">{item.sessionsCount} Seans — {item.durationDays} gün geçerli</p>
                 <p className="text-xs leading-relaxed text-[#e8e4dc]/70">{item.description}</p>
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleDeletePackage(item.id)}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Paketi Sil
-                  </button>
+                <div className="pt-2 flex justify-end gap-3">
+                  <button onClick={() => setEditingPackage({ ...item })} className="text-xs text-[#c9a66b] hover:text-[#d4af37] font-medium">✏ Düzenle</button>
+                  <button onClick={() => handleDeletePackage(item.id)} className="text-xs text-red-400 hover:text-red-300">Sil</button>
                 </div>
               </div>
             ))}
@@ -1202,19 +1379,36 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             </form>
           )}
 
+          {/* Edit Instructor Modal */}
+          {editingInstructor && (
+            <form onSubmit={handleUpdateInstructor} className="rounded-2xl border border-[#c9a66b]/40 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Eğitmen Düzenle — {editingInstructor.fullName}</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <input type="text" placeholder="Ad Soyad" required value={editingInstructor.fullName} onChange={(e) => setEditingInstructor({ ...editingInstructor, fullName: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Unvan" value={editingInstructor.role || ""} onChange={(e) => setEditingInstructor({ ...editingInstructor, role: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="text" placeholder="Uzmanlıklar (virgülle)" value={Array.isArray(editingInstructor.specialties) ? editingInstructor.specialties.join(", ") : (editingInstructor.specialties || "")} onChange={(e) => setEditingInstructor({ ...editingInstructor, specialties: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="number" placeholder="Deneyim (Yıl)" min={1} value={editingInstructor.experienceYears || 1} onChange={(e) => setEditingInstructor({ ...editingInstructor, experienceYears: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="tel" placeholder="Telefon" value={editingInstructor.phone || ""} onChange={(e) => setEditingInstructor({ ...editingInstructor, phone: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <input type="email" placeholder="E-posta" value={editingInstructor.email || ""} onChange={(e) => setEditingInstructor({ ...editingInstructor, email: e.target.value })} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]" />
+                <textarea placeholder="Biyografi" value={editingInstructor.bio || ""} onChange={(e) => setEditingInstructor({ ...editingInstructor, bio: e.target.value })} rows={3} className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b] sm:col-span-3" />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button type="button" onClick={() => setEditingInstructor(null)} className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white">Vazgeç</button>
+                <button type="submit" className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]">Güncelle</button>
+              </div>
+            </form>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {instructorsList.map((item: any) => (
               <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-[#c9a66b]">{item.role}</span>
                 <h3 className="font-serif text-xl text-white">{item.fullName}</h3>
                 <p className="text-xs leading-relaxed text-[#e8e4dc]/70">{item.bio}</p>
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={() => handleDeleteInstructor(item.id)}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Eğitmeni Sil
-                  </button>
+                <p className="text-xs text-[#e8e4dc]/50">{item.phone} • {item.email}</p>
+                <div className="pt-2 flex justify-end gap-3">
+                  <button onClick={() => setEditingInstructor({ ...item })} className="text-xs text-[#c9a66b] hover:text-[#d4af37] font-medium">✏ Düzenle</button>
+                  <button onClick={() => handleDeleteInstructor(item.id)} className="text-xs text-red-400 hover:text-red-300">Sil</button>
                 </div>
               </div>
             ))}
