@@ -435,8 +435,12 @@ export default async function HomePage() {
                   <p className="mt-2 text-base font-light text-[#f5f3f0]">Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara</p>
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-[#121822]/40 px-6 py-5">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#bfa38e]">Saatler</p>
-                  <p className="mt-2 text-base font-light text-[#f5f3f0]">Pzt — Cmt: 08:00 — 20:30</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#bfa38e]">Çalışma Saatleri</p>
+                  <div className="mt-2 space-y-1 text-sm font-light text-[#f5f3f0]">
+                    <p>Pazartesi — Cuma: 09:00 — 21:00</p>
+                    <p>Cumartesi: 09:00 — 13:00</p>
+                    <p className="text-xs font-medium text-[#c9a66b]">Pazar: Kapalıyız</p>
+                  </div>
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-[#121822]/40 px-6 py-5">
                   <p className="text-xs uppercase tracking-[0.2em] text-[#bfa38e]">İletişim & Telefon</p>
