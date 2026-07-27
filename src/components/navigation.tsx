@@ -17,10 +17,11 @@ export default function Navigation() {
   }, []);
 
   const links = [
-    { label: "Stüdyo", href: "#stüdyo" },
-    { label: "Program", href: "#program" },
-    { label: "Paketler", href: "#paketler" },
-    { label: "İletişim", href: "#iletisim" },
+    { label: "Stüdyo", href: "/#stüdyo" },
+    { label: "Program", href: "/#program" },
+    { label: "Paketler", href: "/#paketler" },
+    { label: "Galeri", href: "/galeri" },
+    { label: "İletişim", href: "/#iletisim" },
   ];
 
   return (

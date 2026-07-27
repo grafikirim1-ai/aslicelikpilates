@@ -107,6 +107,17 @@ export const notifications = pgTable("acp_notifications", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const gallery = pgTable("acp_gallery", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 160 }).notNull(),
+  category: varchar("category", { length: 80 }).notNull().default("Stüdyo"),
+  imageUrl: text("image_url").notNull(),
+  description: text("description"),
+  order: integer("order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const instructorRelations = relations(instructors, ({ many }) => ({
   sessions: many(sessions),
 }));

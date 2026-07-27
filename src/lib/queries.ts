@@ -1,7 +1,7 @@
 import { asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { inquiries, instructors, notifications, packages, sessions } from "@/db/schema";
+import { inquiries, instructors, notifications, packages, sessions, gallery } from "@/db/schema";
 import { ensureSeedData } from "@/lib/seed";
 
 function asNumber(value: number | string | null | undefined) {
@@ -11,7 +11,7 @@ function asNumber(value: number | string | null | undefined) {
 export async function getWebsiteData() {
   await ensureSeedData();
 
-  const [coachRows, packageRows, sessionRows, totalLeadRows] = await Promise.all([
+  const [coachRows, packageRows, sessionRows, totalLeadRows, galleryRows] = await Promise.all([
     db.select().from(instructors).where(eq(instructors.isActive, true)).orderBy(desc(instructors.experienceYears)),
     db.select().from(packages).where(eq(packages.isActive, true)).orderBy(desc(packages.isPopular), asc(packages.price)),
     db.select({
@@ -34,6 +34,7 @@ export async function getWebsiteData() {
       .where(eq(sessions.isActive, true))
       .orderBy(asc(sessions.weekday), asc(sessions.startTime)),
     db.select({ count: sql<number>`count(*)` }).from(inquiries),
+    db.select().from(gallery).where(eq(gallery.isActive, true)).orderBy(asc(gallery.order), desc(gallery.createdAt)),
   ]);
 
   const totalLeads = asNumber(totalLeadRows[0]?.count);
@@ -45,6 +46,7 @@ export async function getWebsiteData() {
       price: asNumber(item.price),
     })),
     sessions: sessionRows,
+    gallery: galleryRows,
     stats: {
       weeklySessions: sessionRows.length,
       activeCoaches: coachRows.length,
@@ -68,6 +70,10 @@ export async function getDashboardData() {
     recentInquiries,
     recentNotifications,
     schedule,
+    allSessions,
+    allPackages,
+    allInstructors,
+    allGallery,
   ] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(inquiries),
     db
@@ -79,7 +85,7 @@ export async function getDashboardData() {
     db.select({ count: sql<number>`count(*)` }).from(notifications),
     db.select({ value: sql<string>`coalesce(avg(${packages.price}), 0)` }).from(packages),
     db.select({ count: sql<number>`count(*)` }).from(inquiries).where(eq(inquiries.status, "new")),
-    db.select().from(inquiries).orderBy(desc(inquiries.createdAt)).limit(8),
+    db.select().from(inquiries).orderBy(desc(inquiries.createdAt)).limit(15),
     db.select().from(notifications).orderBy(desc(notifications.createdAt)).limit(10),
     db
       .select({
@@ -96,6 +102,10 @@ export async function getDashboardData() {
       .innerJoin(instructors, eq(sessions.instructorId, instructors.id))
       .where(eq(sessions.isActive, true))
       .orderBy(asc(sessions.weekday), asc(sessions.startTime)),
+    db.select().from(sessions).orderBy(asc(sessions.weekday), asc(sessions.startTime)),
+    db.select().from(packages).orderBy(asc(packages.id)),
+    db.select().from(instructors).orderBy(asc(instructors.id)),
+    db.select().from(gallery).orderBy(asc(gallery.order), desc(gallery.createdAt)),
   ]);
 
   return {
@@ -111,6 +121,10 @@ export async function getDashboardData() {
     recentInquiries,
     recentNotifications,
     schedule,
+    allSessions,
+    allPackages,
+    allInstructors,
+    allGallery,
   };
 }
 

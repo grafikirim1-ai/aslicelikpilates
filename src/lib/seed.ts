@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import type { AnyPgTable } from "drizzle-orm/pg-core";
 
 import { db } from "@/db";
-import { inquiries, instructors, notifications, packages, sessions } from "@/db/schema";
+import { inquiries, instructors, notifications, packages, sessions, gallery } from "@/db/schema";
 
 async function countRows(table: AnyPgTable) {
   const result = await db.select({ count: sql<number>`count(*)` }).from(table);
@@ -10,6 +10,46 @@ async function countRows(table: AnyPgTable) {
 }
 
 export async function ensureSeedData() {
+  const galleryCount = await countRows(gallery);
+  if (galleryCount === 0) {
+    await db.insert(gallery).values([
+      {
+        title: "Aslı Çelik Reformer Çalışması",
+        category: "Eğitmen & Seans",
+        imageUrl: "/asli-celik-reformer.jpg",
+        description: "Reformer pilates ekipmanı üzerinde kişiye özel postür ve denge çalışması.",
+        order: 1,
+      },
+      {
+        title: "Ladder Barrel Esneklik Akışı",
+        category: "Eğitmen & Seans",
+        imageUrl: "/asli-celik-stretch.jpg",
+        description: "Omurga sağlığı ve derin esneklik sağlayan özel ekipman seansı.",
+        order: 2,
+      },
+      {
+        title: "Stüdyo Aynası & Hazırlık",
+        category: "Stüdyomuz",
+        imageUrl: "/asli-celik-studio.jpg",
+        description: "Butik stüdyomuzda seans öncesi kişisel değerlendirme ve hazırlık.",
+        order: 3,
+      },
+      {
+        title: "Resepsiyon & Karşılama Alanı",
+        category: "Stüdyomuz",
+        imageUrl: "/studio-reception.jpg",
+        description: "Dinlenme, karşılama ve ücretsiz ön görüşme alanı.",
+        order: 4,
+      },
+      {
+        title: "Reformer Grup & Birebir Salonu",
+        category: "Stüdyomuz",
+        imageUrl: "/studio-reformers.jpg",
+        description: "Geniş kemerli aynalar ve modern ahşap reformer cihazlarımız.",
+        order: 5,
+      },
+    ]);
+  }
   const instructorCount = await countRows(instructors);
 
   if (instructorCount === 0) {

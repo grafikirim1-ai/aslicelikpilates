@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import Navigation from "@/components/navigation";
 import { ContactForm } from "@/components/contact-form";
@@ -330,6 +331,56 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Photo Gallery Section */}
+      <section id="galeri" className="relative overflow-hidden bg-[#050507] border-t border-white/[0.06]">
+        <div className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-36 space-y-16">
+          <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-end">
+            <div className="space-y-4">
+              <SectionLabel label="Stüdyomuz & Yaşam" />
+              <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-6xl">
+                Fotoğraf <span className="italic text-[#c9a66b]">Albümü</span>
+              </h2>
+              <GoldLine />
+            </div>
+            <Link
+              href="/galeri"
+              className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b]/10 px-7 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a66b] transition hover:bg-[#c9a66b]/20"
+            >
+              Tüm Albümü İnceleyin (5) →
+            </Link>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {(data.gallery || []).slice(0, 3).map((item) => (
+              <Link
+                key={item.id}
+                href="/galeri"
+                className="group relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0c0c0e] shadow-2xl transition duration-500 hover:-translate-y-1.5 hover:border-[#c9a66b]/40"
+              >
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition duration-700 ease-out group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/90 via-[#000000]/30 to-transparent opacity-80 transition duration-300 group-hover:opacity-95" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 space-y-1.5">
+                  <span className="inline-block rounded-full border border-[#c9a66b]/30 bg-[#c9a66b]/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c9a66b]">
+                    {item.category}
+                  </span>
+                  <h3 className="font-serif text-xl font-light text-[#f5f3f0]">
+                    {item.title}
+                  </h3>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
