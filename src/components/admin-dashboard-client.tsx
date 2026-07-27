@@ -56,7 +56,25 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
   const [editingPaymentMember, setEditingPaymentMember] = useState<any>(null);
   const [newPaidInput, setNewPaidInput] = useState("");
 
-  // Form Modals / Input states
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
+
+  async function handleSendReminders() {
+    setIsSendingReminders(true);
+    try {
+      const res = await fetch("/api/cron/reminders", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`Bugünkü seanslar için ${data.totalRemindersSent} adet profesyonel hatırlatma e-postası başarıyla gönderildi ve kuyruğa işlendi!`);
+      } else {
+        alert(data.error || "Hatırlatma mailleri gönderilemedi");
+      }
+    } catch (e) {
+      alert("Hata oluştu");
+    } finally {
+      setIsSendingReminders(false);
+    }
+  }
+
   const [isAddingSession, setIsAddingSession] = useState(false);
   const [newSession, setNewSession] = useState({
     title: "",
@@ -567,12 +585,21 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
               <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Üye & Seans & Ödeme Takibi</h2>
               <p className="text-xs text-[#e8e4dc]/50">Üyelerin seans düşümlerini yapın, ödemelerini kaydedin ve takibini yapın.</p>
             </div>
-            <button
-              onClick={() => setIsAddingMember(true)}
-              className="self-start sm:self-auto rounded-full bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
-            >
-              + Yeni Üye Kaydı Al
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleSendReminders}
+                disabled={isSendingReminders}
+                className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b]/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#c9a66b] transition hover:bg-[#c9a66b]/20 disabled:opacity-50"
+              >
+                {isSendingReminders ? "Gönderiliyor..." : "📨 Sabah Hatırlatma Maillerini Gönder"}
+              </button>
+              <button
+                onClick={() => setIsAddingMember(true)}
+                className="rounded-full bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
+              >
+                + Yeni Üye Kaydı Al
+              </button>
+            </div>
           </div>
 
           {/* New Member Registration Modal */}
