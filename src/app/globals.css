@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-ivory: #f5f3f0;
+  --color-charcoal: #0a0f14;
+  --color-charcoal-light: #121822;
+  --color-gold: #c9a66b;
+  --color-gold-soft: #bfa38e;
+  --color-rose-muted: #bfa38e;
+  --color-stone: #e8e4dc;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(201, 166, 107, 0.22);
+  color: #f5f3f0;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lineGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

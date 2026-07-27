@@ -1,0 +1,235 @@
+import { sql } from "drizzle-orm";
+import type { AnyPgTable } from "drizzle-orm/pg-core";
+
+import { db } from "@/db";
+import { inquiries, instructors, notifications, packages, sessions } from "@/db/schema";
+
+async function countRows(table: AnyPgTable) {
+  const result = await db.select({ count: sql<number>`count(*)` }).from(table);
+  return Number(result[0]?.count ?? 0);
+}
+
+export async function ensureSeedData() {
+  const instructorCount = await countRows(instructors);
+
+  if (instructorCount === 0) {
+    await db.insert(instructors).values([
+      {
+        fullName: "Aslı Çelik",
+        role: "Kurucu Eğitmen",
+        specialties: ["Reformer Pilates", "Postür Düzeltme", "Nefes Çalışmaları"],
+        bio: "12 yılı aşkın deneyimiyle kadın sağlığı, postür iyileştirme ve kişiye özel pilates programlarında uzmanlaşmış baş eğitmen.",
+        phone: "+90 530 000 00 01",
+        email: "asli@aslicelikpilates.com",
+        experienceYears: 12,
+      },
+      {
+        fullName: "Mina Erdem",
+        role: "Fonksiyonel Hareket Uzmanı",
+        specialties: ["Mat Pilates", "Hamile Pilatesi", "Mobilite"],
+        bio: "Güç, esneklik ve günlük yaşam konforunu aynı programda buluşturan akış temelli dersler tasarlar.",
+        phone: "+90 530 000 00 02",
+        email: "mina@aslicelikpilates.com",
+        experienceYears: 7,
+      },
+      {
+        fullName: "Selin Yıldız",
+        role: "Reformer & Core Coach",
+        specialties: ["Başlangıç Seviyesi", "Core Güçlendirme", "Duruş Analizi"],
+        bio: "Yeni başlayan üyeler için güvenli, motive edici ve sonuç odaklı reformer seansları yürütür.",
+        phone: "+90 530 000 00 03",
+        email: "selin@aslicelikpilates.com",
+        experienceYears: 5,
+      },
+    ]);
+  }
+
+  const packageCount = await countRows(packages);
+
+  if (packageCount === 0) {
+    await db.insert(packages).values([
+      {
+        slug: "deneme-paketi",
+        name: "Tanışma Paketi",
+        description: "Stüdyomuzu deneyimlemek isteyenler için ölçüm, ihtiyaç analizi ve 2 özel ders içeren başlangıç seti.",
+        sessionsCount: 2,
+        durationDays: 14,
+        price: "2500.00",
+        focus: "İlk değerlendirme ve güvenli başlangıç",
+        includes: ["Postür analizi", "2 birebir reformer dersi", "Mini yaşam rutini planı"],
+        isPopular: false,
+      },
+      {
+        slug: "denge-8",
+        name: "Denge 8'li Paket",
+        description: "Haftalık rutine düzenli devam etmek isteyenler için en popüler reformer çözümü.",
+        sessionsCount: 8,
+        durationDays: 35,
+        price: "8200.00",
+        focus: "Düzenli gelişim ve sürdürülebilir disiplin",
+        includes: ["8 reformer dersi", "Aylık gelişim takibi", "WhatsApp hatırlatmaları"],
+        isPopular: true,
+      },
+      {
+        slug: "guclen-12",
+        name: "Güçlen 12'li Paket",
+        description: "Yoğun çalışma temposuna rağmen hızlı toparlanma ve derinleşen pratik isteyen üyeler için.",
+        sessionsCount: 12,
+        durationDays: 45,
+        price: "11400.00",
+        focus: "Core güçlenme ve görünür dönüşüm",
+        includes: ["12 ders", "Esneklik odaklı ek plan", "Öncelikli rezervasyon desteği"],
+        isPopular: false,
+      },
+    ]);
+  }
+
+  const sessionCount = await countRows(sessions);
+
+  if (sessionCount === 0) {
+    const coachRows = await db.select().from(instructors);
+    const coachMap = new Map(coachRows.map((coach) => [coach.email, coach.id]));
+
+    await db.insert(sessions).values([
+      {
+        slug: "pazartesi-sabah-reformer",
+        title: "Sabah Reformer Flow",
+        sessionType: "Reformer Pilates",
+        level: "Başlangıç - Orta",
+        dayLabel: "Pazartesi",
+        weekday: 1,
+        startTime: "09:00",
+        endTime: "09:50",
+        durationMinutes: 50,
+        capacity: 6,
+        location: "Bağlıca Stüdyo",
+        description: "Haftaya omurgayı uyandıran, nefes ve merkez kaslarını aktive eden yumuşak başlangıç dersi.",
+        instructorId: coachMap.get("asli@aslicelikpilates.com") ?? coachRows[0].id,
+        isFeatured: true,
+      },
+      {
+        slug: "sali-aksam-core",
+        title: "Core Balance",
+        sessionType: "Mat Pilates",
+        level: "Orta",
+        dayLabel: "Salı",
+        weekday: 2,
+        startTime: "19:00",
+        endTime: "19:50",
+        durationMinutes: 50,
+        capacity: 8,
+        location: "Bağlıca Stüdyo",
+        description: "Karın, bel ve kalça hattını güçlendirirken denge hissini kuvvetlendiren akşam akışı.",
+        instructorId: coachMap.get("mina@aslicelikpilates.com") ?? coachRows[1]?.id ?? coachRows[0].id,
+        isFeatured: true,
+      },
+      {
+        slug: "carsamba-hamile-pilatesi",
+        title: "Prenatal Ease",
+        sessionType: "Hamile Pilatesi",
+        level: "Güvenli Başlangıç",
+        dayLabel: "Çarşamba",
+        weekday: 3,
+        startTime: "13:00",
+        endTime: "13:50",
+        durationMinutes: 50,
+        capacity: 5,
+        location: "Özel Ders Salonu",
+        description: "Hamilelik sürecinde nefes, mobilite ve güvenli güçlenmeye odaklanan destekleyici seans.",
+        instructorId: coachMap.get("mina@aslicelikpilates.com") ?? coachRows[1]?.id ?? coachRows[0].id,
+        isFeatured: false,
+      },
+      {
+        slug: "persembe-aksam-reformer",
+        title: "Evening Tone",
+        sessionType: "Reformer Pilates",
+        level: "Başlangıç",
+        dayLabel: "Perşembe",
+        weekday: 4,
+        startTime: "18:30",
+        endTime: "19:20",
+        durationMinutes: 50,
+        capacity: 6,
+        location: "Bağlıca Stüdyo",
+        description: "Uzun günlerin ardından bedeni toparlayan, eklem dostu akşam reformer pratiği.",
+        instructorId: coachMap.get("selin@aslicelikpilates.com") ?? coachRows[2]?.id ?? coachRows[0].id,
+        isFeatured: true,
+      },
+      {
+        slug: "cumartesi-booty-core",
+        title: "Weekend Sculpt",
+        sessionType: "Fonksiyonel Pilates",
+        level: "Orta - İleri",
+        dayLabel: "Cumartesi",
+        weekday: 6,
+        startTime: "11:00",
+        endTime: "11:50",
+        durationMinutes: 50,
+        capacity: 8,
+        location: "Bağlıca Stüdyo",
+        description: "Hafta sonunu enerjiyle açan, kuvvet ve akış birleşimli dinamik grup dersi.",
+        instructorId: coachMap.get("asli@aslicelikpilates.com") ?? coachRows[0].id,
+        isFeatured: true,
+      },
+    ]);
+  }
+
+  const inquiryCount = await countRows(inquiries);
+
+  if (inquiryCount === 0) {
+    const inserted = await db
+      .insert(inquiries)
+      .values([
+        {
+          fullName: "Elif Kaya",
+          phone: "+90 532 111 22 33",
+          email: "elif@example.com",
+          goal: "Bel ağrısını azaltmak ve düzenli egzersiz rutini oluşturmak",
+          preferredPackage: "Denge 8'li Paket",
+          wantsWhatsapp: true,
+          message: "Ofis temposundan dolayı akşam saatlerinde uygun grup dersleri arıyorum.",
+          status: "contacted",
+        },
+        {
+          fullName: "Zeynep Aydın",
+          phone: "+90 533 444 55 66",
+          email: "zeynep@example.com",
+          goal: "Hamilelik döneminde güvenli hareket programı",
+          preferredPackage: "Tanışma Paketi",
+          wantsWhatsapp: true,
+          message: "Doktor onayıyla haftada iki gün destek almak istiyorum.",
+          status: "new",
+        },
+      ])
+      .returning({ id: inquiries.id, fullName: inquiries.fullName, phone: inquiries.phone, email: inquiries.email });
+
+    await db.insert(notifications).values([
+      {
+        channel: "whatsapp",
+        recipient: inserted[0]?.phone ?? "+90 532 111 22 33",
+        title: "Tanışma mesajı",
+        message: "Merhaba Elif, sizin için uygun akşam seanslarını paylaştık.",
+        eventType: "lead-follow-up",
+        status: "demo-sent",
+        relatedInquiryId: inserted[0]?.id,
+      },
+      {
+        channel: "email",
+        recipient: inserted[1]?.email ?? "zeynep@example.com",
+        title: "Hamile pilatesi bilgilendirmesi",
+        message: "Prenatal seans akışımız ve değerlendirme sürecimiz e-posta ile iletildi.",
+        eventType: "lead-follow-up",
+        status: "demo-sent",
+        relatedInquiryId: inserted[1]?.id,
+      },
+      {
+        channel: "dashboard",
+        recipient: "stüdyo paneli",
+        title: "Yeni lead kaydı",
+        message: "Web formundan gelen ziyaretçiler yönetim paneline işlendi.",
+        eventType: "internal-alert",
+        status: "logged",
+      },
+    ]);
+  }
+}
