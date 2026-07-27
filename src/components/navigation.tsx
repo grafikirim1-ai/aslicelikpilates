@@ -32,15 +32,15 @@ export default function Navigation() {
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-10">
         <Link href="/" className="group flex items-center gap-3">
           <Image
             src="/logo.png"
             alt="Toned by ASLI ÇELİK PILATES Studio"
-            width={200}
-            height={70}
+            width={280}
+            height={100}
             priority
-            className="h-10 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-14 sm:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
 
