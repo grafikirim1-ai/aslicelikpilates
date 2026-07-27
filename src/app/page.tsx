@@ -385,28 +385,43 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Dashboard / System Overview */}
+      {/* Studio Privileges / Standards Overview */}
       <section className="border-t border-white/[0.06] bg-[#121822]">
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+        <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
           <div className="mx-auto max-w-4xl text-center">
-            <SectionLabel label="Altyapı" />
+            <SectionLabel label="Stüdyo Standartları" />
             <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-5xl">
-              Her detay <br />
-              <span className="italic text-[#bfa38e]">kontrol altında.</span>
+              Sağlığınız & Konforunuz İçin <br />
+              <span className="italic text-[#c9a66b]">Özel Ayrıcalıklar</span>
             </h2>
             <GoldLine />
-            <p className="text-[#e8e4dc]/50">Bu site, sadece bir vitrin değil; stüdyonun operasyonel omurgasıdır.</p>
+            <p className="text-sm leading-relaxed text-[#e8e4dc]/60">
+              Etimesgut Bağlıca'daki butik stüdyomuzda hedeflerinize en kısa ve güvenli yoldan ulaşmanız için tasarlandı.
+            </p>
           </div>
 
-          <div className="mt-14 grid gap-4 md:grid-cols-3">
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
             {[
-              { title: "Web API", desc: "`/api/site`, `/api/inquiries`, `/api/dashboard`, `/api/health` ile yayın, form ve panel verileri ayrıştırıldı." },
-              { title: "Yönetim Paneli", desc: "Lead listesi, paket istatistikleri, ders programı ve bildirim kuyruğu tek ekranda toplanır." },
-              { title: "Bildirim Akışı", desc: "Yeni talep geldiğinde WhatsApp, e-posta ve iç panel bildirimleri veritabanına işlenir." },
+              {
+                title: "Butik & Kişiye Özel",
+                desc: "Maksimum 4-5 kişilik sınıflar veya tam mahremiyet sunan birebir özel ders salonlarımızda, tüm dikkatimiz sadece sizin üzerinizde.",
+              },
+              {
+                title: "Kapsamlı Ekipman Parkuru",
+                desc: "Reformer, Cadillac, Chair, Barrel, Barre ve Spine Corrector cihazlarıyla omurga sağlığı, duruş düzeltme ve sıkılaşmada tam donanım.",
+              },
+              {
+                title: "Uzman & Sertifikalı Rehberlik",
+                desc: "Kurucu Eğitmen Aslı Çelik ve uzman ekibimiz eşliğinde, ilk seans öncesi ücretsiz postür ve esneklik analizi ile kişiselleştirilmiş gelişim.",
+              },
             ].map((card) => (
-              <div key={card.title} className="rounded-[2rem] border border-white/[0.06] bg-[#0a0f14]/50 p-7 transition hover:border-[#c9a66b]/20 hover:bg-[#0a0f14]/80">
-                <h3 className="font-serif text-xl font-light text-[#f5f3f0]">{card.title}</h3>
-                <p className="mt-4 text-sm leading-[1.75] text-[#e8e4dc]/50">{card.desc}</p>
+              <div
+                key={card.title}
+                className="rounded-[2rem] border border-white/[0.08] bg-[#0a0f14]/60 p-8 transition duration-300 hover:border-[#c9a66b]/30 hover:bg-[#0a0f14]/90"
+              >
+                <h3 className="font-serif text-2xl font-light text-[#f5f3f0]">{card.title}</h3>
+                <div className="mt-3 h-[1px] w-10 bg-[#c9a66b]/40" />
+                <p className="mt-5 text-sm leading-[1.8] text-[#e8e4dc]/60">{card.desc}</p>
               </div>
             ))}
           </div>
