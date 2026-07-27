@@ -1,7 +1,7 @@
 import { asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { inquiries, instructors, notifications, packages, sessions, gallery } from "@/db/schema";
+import { inquiries, instructors, notifications, packages, sessions, gallery, members } from "@/db/schema";
 import { ensureSeedData } from "@/lib/seed";
 
 function asNumber(value: number | string | null | undefined) {
@@ -74,6 +74,7 @@ export async function getDashboardData() {
     allPackages,
     allInstructors,
     allGallery,
+    allMembers,
   ] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(inquiries),
     db
@@ -106,6 +107,7 @@ export async function getDashboardData() {
     db.select().from(packages).orderBy(asc(packages.id)),
     db.select().from(instructors).orderBy(asc(instructors.id)),
     db.select().from(gallery).orderBy(asc(gallery.order), desc(gallery.createdAt)),
+    db.select().from(members).orderBy(desc(members.createdAt)),
   ]);
 
   return {
@@ -125,6 +127,7 @@ export async function getDashboardData() {
     allPackages,
     allInstructors,
     allGallery,
+    allMembers,
   };
 }
 

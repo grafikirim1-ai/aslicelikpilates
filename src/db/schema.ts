@@ -125,6 +125,22 @@ export const adminUsers = pgTable("acp_admin_users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const members = pgTable("acp_members", {
+  id: serial("id").primaryKey(),
+  fullName: varchar("full_name", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 30 }).notNull(),
+  email: varchar("email", { length: 160 }),
+  packageName: varchar("package_name", { length: 120 }).notNull(),
+  totalSessions: integer("total_sessions").notNull().default(8),
+  remainingSessions: integer("remaining_sessions").notNull().default(8),
+  totalPrice: numeric("total_price", { precision: 10, scale: 2 }).notNull().default("8000.00"),
+  paidAmount: numeric("paid_amount", { precision: 10, scale: 2 }).notNull().default("8000.00"),
+  paymentStatus: varchar("payment_status", { length: 40 }).notNull().default("paid"),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("Kredi Kartı"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const instructorRelations = relations(instructors, ({ many }) => ({
   sessions: many(sessions),
 }));
