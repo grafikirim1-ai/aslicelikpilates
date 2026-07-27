@@ -15,6 +15,7 @@ async function sendTest(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const targetEmail = searchParams.get("email") || "fatih@prosigma.net";
+    const wantsPreviewHtml = searchParams.get("preview") === "1" || searchParams.get("html") === "1";
 
     const result = await queueReminderNotification({
       memberId: 999,
@@ -28,11 +29,18 @@ async function sendTest(req: Request) {
       location: "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara",
     });
 
+    if (wantsPreviewHtml) {
+      return new NextResponse(result.htmlContent, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: `Test hatırlatma e-postası '${targetEmail}' adresine başarıyla gönderildi ve bildirimi veritabanına işlendi.`,
       targetEmail,
       notification: result.notif,
+      visualPreviewUrl: `/api/admin/send-test-email?email=${encodeURIComponent(targetEmail)}&preview=1`,
       htmlPreview: result.htmlContent,
     });
   } catch (error: any) {
