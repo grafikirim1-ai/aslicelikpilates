@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -9,7 +9,26 @@ type AdminClientProps = {
 };
 
 export function AdminDashboardClient({ initialData }: AdminClientProps) {
-  const [activeTab, setActiveTab] = useState<"inquiries" | "sessions" | "packages" | "instructors" | "gallery">("inquiries");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Login form state
+  const [loginUsername, setLoginUsername] = useState("admin");
+  const [loginPassword, setLoginPassword] = useState("admin");
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newUsername, setNewUsername] = useState("admin");
+  const [newPassword, setNewPassword] = useState("");
+  const [credMessage, setCredMessage] = useState("");
+  const [credError, setCredError] = useState("");
+  const [isUpdatingCreds, setIsUpdatingCreds] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<
+    "inquiries" | "sessions" | "packages" | "instructors" | "gallery" | "security"
+  >("inquiries");
 
   const [inquiriesList, setInquiriesList] = useState(initialData.recentInquiries || []);
   const [sessionsList, setSessionsList] = useState(initialData.allSessions || []);
@@ -36,7 +55,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
   const [newPackage, setNewPackage] = useState({
     name: "",
     focus: "Düzenli Gelişim",
-    price: "8500",
+    price: "8000",
     sessionsCount: 8,
     durationDays: 30,
     description: "",
@@ -62,6 +81,73 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
     imageUrl: "",
     description: "",
   });
+
+  useEffect(() => {
+    const sessionToken = localStorage.getItem("acp_admin_auth");
+    if (sessionToken === "true") {
+      setIsLoggedIn(true);
+    }
+    setIsCheckingAuth(false);
+  }, []);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem("acp_admin_auth", "true");
+        setIsLoggedIn(true);
+      } else {
+        setLoginError(data.error || "Hatalı kullanıcı adı veya şifre!");
+      }
+    } catch (err: any) {
+      setLoginError("Giriş yapılamadı. Lütfen tekrar deneyin.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("acp_admin_auth");
+    setIsLoggedIn(false);
+  }
+
+  async function handleUpdateCredentials(e: React.FormEvent) {
+    e.preventDefault();
+    setCredMessage("");
+    setCredError("");
+    setIsUpdatingCreds(true);
+    try {
+      const res = await fetch("/api/admin/credentials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newUsername,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCredMessage("Kullanıcı adı ve şifre başarıyla güncellendi!");
+        setCurrentPassword("");
+        setNewPassword("");
+      } else {
+        setCredError(data.error || "Güncellenemedi.");
+      }
+    } catch (err: any) {
+      setCredError("Bir hata oluştu.");
+    } finally {
+      setIsUpdatingCreds(false);
+    }
+  }
 
   // Action Handlers
   async function handleStatusChange(id: number, status: string) {
@@ -103,6 +189,8 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
           location: "Bağlıca Stüdyo",
           description: "",
         });
+      } else {
+        alert(data.error || "Eklenemedi");
       }
     } catch (e) {
       alert("Hata oluştu");
@@ -117,7 +205,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         setSessionsList((prev: any[]) => prev.filter((item) => item.id !== id));
       }
     } catch (e) {
-      alert("Hata oluştu");
+      alert("Silinemedi");
     }
   }
 
@@ -131,18 +219,20 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       });
       const data = await res.json();
       if (data.ok) {
-        setPackagesList((prev: any[]) => [...prev, data.package]);
+        setPackagesList((prev: any[]) => [...prev, data.pkg]);
         setIsAddingPackage(false);
         setNewPackage({
           name: "",
           focus: "Düzenli Gelişim",
-          price: "8500",
+          price: "8000",
           sessionsCount: 8,
           durationDays: 30,
           description: "",
           includes: "Postür analizi, 8 seans, WhatsApp takibi",
           isPopular: false,
         });
+      } else {
+        alert(data.error || "Eklenemedi");
       }
     } catch (e) {
       alert("Hata oluştu");
@@ -157,7 +247,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         setPackagesList((prev: any[]) => prev.filter((item) => item.id !== id));
       }
     } catch (e) {
-      alert("Hata oluştu");
+      alert("Silinemedi");
     }
   }
 
@@ -182,6 +272,8 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
           phone: "+90 543 000 00 00",
           email: "egitmen@aslicelikpilates.com",
         });
+      } else {
+        alert(data.error || "Eklenemedi");
       }
     } catch (e) {
       alert("Hata oluştu");
@@ -196,7 +288,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         setInstructorsList((prev: any[]) => prev.filter((item) => item.id !== id));
       }
     } catch (e) {
-      alert("Hata oluştu");
+      alert("Silinemedi");
     }
   }
 
@@ -210,9 +302,16 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       });
       const data = await res.json();
       if (data.ok) {
-        setGalleryList((prev: any[]) => [data.gallery, ...prev]);
+        setGalleryList((prev: any[]) => [...prev, data.item]);
         setIsAddingGallery(false);
-        setNewGallery({ title: "", category: "Stüdyomuz", imageUrl: "", description: "" });
+        setNewGallery({
+          title: "",
+          category: "Stüdyomuz",
+          imageUrl: "",
+          description: "",
+        });
+      } else {
+        alert(data.error || "Eklenemedi");
       }
     } catch (e) {
       alert("Hata oluştu");
@@ -220,91 +319,178 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
   }
 
   async function handleDeleteGallery(id: number) {
-    if (!confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) return;
+    if (!confirm("Bu fotoğrafı albümden silmek istediğinize emin misiniz?")) return;
     try {
       const res = await fetch(`/api/admin/gallery?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         setGalleryList((prev: any[]) => prev.filter((item) => item.id !== id));
       }
     } catch (e) {
-      alert("Hata oluştu");
+      alert("Silinemedi");
     }
   }
 
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center text-sm text-[#e8e4dc]/50">
+        Yönetim paneli yükleniyor...
+      </div>
+    );
+  }
+
+  // LOGIN SCREEN
+  if (!isLoggedIn) {
+    return (
+      <div className="mx-auto max-w-md rounded-[2.5rem] border border-white/[0.08] bg-[#0c0c0e] p-8 sm:p-10 shadow-2xl space-y-8">
+        <div className="text-center space-y-3">
+          <Image
+            src="/logo.png"
+            alt="Aslı Çelik Pilates Studio"
+            width={220}
+            height={70}
+            className="mx-auto h-14 w-auto object-contain"
+          />
+          <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Yönetim Girişi</h2>
+          <p className="text-xs text-[#e8e4dc]/50">
+            Devam etmek için yönetim panelinizin kullanıcı adı ve şifresini girin.
+          </p>
+        </div>
+
+        {loginError && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-xs font-medium text-red-400">
+            {loginError}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#bfa38e]">
+              Kullanıcı Adı
+            </label>
+            <input
+              type="text"
+              required
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              className="w-full rounded-xl border border-white/[0.1] bg-black/50 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#c9a66b]"
+              placeholder="admin"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#bfa38e]">
+              Şifre
+            </label>
+            <input
+              type="password"
+              required
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              className="w-full rounded-xl border border-white/[0.1] bg-black/50 px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-[#c9a66b]"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoggingIn}
+            className="w-full rounded-full border border-[#c9a66b]/40 bg-[#c9a66b] py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-[#d4af37] disabled:opacity-50"
+          >
+            {isLoggingIn ? "Giriş Yapılıyor..." : "Yönetim Paneline Giriş Yap"}
+          </button>
+        </form>
+
+        <div className="text-center pt-2">
+          <p className="text-[11px] text-[#e8e4dc]/40">
+            Varsayılan Giriş: kullanıcı adı <code className="text-[#c9a66b]">admin</code> / şifre <code className="text-[#c9a66b]">admin</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // LOGGED IN ADMIN DASHBOARD
   return (
     <div className="space-y-8">
-      {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-        <div className="flex flex-wrap gap-2">
+      {/* Navigation Tabs - Fully Mobile Responsive & Scrollable */}
+      <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div className="flex overflow-x-auto scrollbar-none gap-2 sm:gap-3 py-1">
           {[
-            { id: "inquiries", label: `Gelen Talepler (${inquiriesList.length})` },
-            { id: "sessions", label: `Seanslar & Program (${sessionsList.length})` },
-            { id: "packages", label: `Paketler & Fiyatlar (${packagesList.length})` },
-            { id: "instructors", label: `Eğitmen Kadrosu (${instructorsList.length})` },
-            { id: "gallery", label: `Fotoğraf Albümü (${galleryList.length})` },
+            { id: "inquiries", label: "Talepler", count: inquiriesList.length },
+            { id: "sessions", label: "Seanslar", count: sessionsList.length },
+            { id: "packages", label: "Paketler", count: packagesList.length },
+            { id: "instructors", label: "Eğitmenler", count: instructorsList.length },
+            { id: "gallery", label: "Fotoğraf Albümü", count: galleryList.length },
+            { id: "security", label: "🔑 Şifre & Ayarlar", count: null },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition ${
+              className={`shrink-0 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-medium tracking-wide transition ${
                 activeTab === tab.id
-                  ? "border border-[#c9a66b]/40 bg-[#c9a66b] text-[#000000] shadow-md"
-                  : "border border-white/[0.08] bg-[#0c0c0e] text-[#e8e4dc]/70 hover:border-[#c9a66b]/30 hover:text-white"
+                  ? "bg-[#c9a66b] text-black shadow-lg shadow-[#c9a66b]/20"
+                  : "border border-white/[0.08] bg-white/5 text-[#e8e4dc]/70 hover:border-[#c9a66b]/30 hover:text-white"
               }`}
             >
               {tab.label}
+              {tab.count !== null && (
+                <span
+                  className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
+                    activeTab === tab.id ? "bg-black/20 text-black" : "bg-white/10 text-[#c9a66b]"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        <div className="flex gap-3">
-          <Link
-            href="/galeri"
-            className="rounded-full border border-[#c9a66b]/30 bg-[#c9a66b]/10 px-4 py-2 text-xs font-medium text-[#c9a66b] transition hover:bg-[#c9a66b]/20"
-          >
-            Galeri Sayfasına Git ↗
-          </Link>
-          <Link
-            href="/"
-            className="rounded-full border border-white/[0.08] px-4 py-2 text-xs font-medium text-[#e8e4dc]/60 transition hover:text-white"
-          >
-            Siteye Dön ↗
-          </Link>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="shrink-0 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/20"
+        >
+          Çıkış
+        </button>
       </div>
 
-      {/* TAB 1: Gelen Talepler */}
+      {/* TAB 1: INQUIRIES */}
       {activeTab === "inquiries" && (
-        <div className="space-y-4">
-          <h2 className="font-serif text-2xl font-light text-white">Müşteri Ön Görüşme Talepleri</h2>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Müşteri Başvuru Talepleri</h2>
+              <p className="text-xs text-[#e8e4dc]/50">Web sitesinden form dolduran ziyaretçilerin bilgileri ve iletişim durumları.</p>
+            </div>
+          </div>
+
           <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[#0c0c0e]">
-            <table className="w-full text-left text-sm text-[#e8e4dc]/80">
-              <thead className="border-b border-white/[0.08] bg-white/[0.02] text-xs uppercase tracking-wider text-[#bfa38e]">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="border-b border-white/[0.08] bg-white/5 text-[11px] uppercase tracking-wider text-[#bfa38e]">
                 <tr>
-                  <th className="p-4">Ad Soyad</th>
-                  <th className="p-4">İletişim</th>
-                  <th className="p-4">Tercih Edilen Paket</th>
-                  <th className="p-4">Hedef & Mesaj</th>
-                  <th className="p-4">Durum</th>
-                  <th className="p-4 text-right">İşlem</th>
+                  <th className="px-4 py-3.5">Ad Soyad</th>
+                  <th className="px-4 py-3.5">Telefon & E-posta</th>
+                  <th className="px-4 py-3.5">Hedef / İlgi</th>
+                  <th className="px-4 py-3.5">Durum</th>
+                  <th className="px-4 py-3.5 text-right">Aksiyon</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05]">
+              <tbody className="divide-y divide-white/[0.06] text-[#e8e4dc]/80">
                 {inquiriesList.map((item: any) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02]">
-                    <td className="p-4 font-medium text-white">{item.fullName}</td>
-                    <td className="p-4 space-y-1">
-                      <p className="text-xs text-[#c9a66b]">{item.phone}</p>
+                  <tr key={item.id} className="transition hover:bg-white/[0.02]">
+                    <td className="px-4 py-4 font-medium text-white">{item.fullName}</td>
+                    <td className="px-4 py-4 space-y-0.5">
+                      <p className="text-white">{item.phone}</p>
                       <p className="text-xs text-[#e8e4dc]/40">{item.email}</p>
                     </td>
-                    <td className="p-4">{item.preferredPackage || "—"}</td>
-                    <td className="p-4 max-w-xs">
-                      <p className="font-medium text-xs text-white">{item.goal}</p>
-                      <p className="text-xs text-[#e8e4dc]/50 line-clamp-2 mt-1">{item.message}</p>
+                    <td className="px-4 py-4">
+                      <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-[#c9a66b]">
+                        {item.goal || item.preferredPackage || "Genel Bilgi"}
+                      </span>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-4">
                       <span
-                        className={`inline-block rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
                           item.status === "new"
                             ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                             : item.status === "contacted"
@@ -315,13 +501,13 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                         {item.status === "new" ? "Yeni Lead" : item.status === "contacted" ? "İletişime Geçildi" : "Tamamlandı"}
                       </span>
                     </td>
-                    <td className="p-4 text-right space-x-2">
+                    <td className="px-4 py-4 text-right">
                       <select
                         value={item.status}
                         onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                        className="rounded-lg border border-white/10 bg-[#141418] px-2 py-1 text-xs text-white outline-none"
+                        className="rounded-lg border border-white/[0.1] bg-black px-2.5 py-1 text-xs text-white outline-none focus:border-[#c9a66b]"
                       >
-                        <option value="new">Yeni</option>
+                        <option value="new">Yeni Lead</option>
                         <option value="contacted">İletişime Geçildi</option>
                         <option value="completed">Tamamlandı</option>
                       </select>
@@ -334,113 +520,119 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         </div>
       )}
 
-      {/* TAB 2: Seanslar & Program */}
+      {/* TAB 2: SESSIONS */}
       {activeTab === "sessions" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-light text-white">Haftalık Ders Akışı & Seanslar</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Haftalık Ders Akışı & Seanslar</h2>
+              <p className="text-xs text-[#e8e4dc]/50">Ana sayfadaki ders programı akışını ve saatlerini düzenleyin.</p>
+            </div>
             <button
-              onClick={() => setIsAddingSession(!isAddingSession)}
-              className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b] px-5 py-2 text-xs font-semibold text-[#000000] hover:bg-[#d4af37]"
+              onClick={() => setIsAddingSession(true)}
+              className="self-start sm:self-auto rounded-full bg-[#c9a66b] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
             >
-              {isAddingSession ? "Kapat" : "+ Yeni Seans Ekle"}
+              + Yeni Seans Ekle
             </button>
           </div>
 
+          {/* Modal / Form for Session */}
           {isAddingSession && (
-            <form onSubmit={handleCreateSession} className="grid gap-4 rounded-2xl border border-[#c9a66b]/30 bg-[#0e0e12] p-6 md:grid-cols-3">
-              <div>
-                <label className="text-xs text-[#bfa38e]">Seans Adı</label>
+            <form onSubmit={handleCreateSession} className="rounded-2xl border border-[#c9a66b]/30 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Yeni Seans Tanımla</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <input
+                  type="text"
+                  placeholder="Ders Adı (Örn: Reformer Flow)"
                   required
                   value={newSession.title}
                   onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
-                  placeholder="Örn. Sabah Reformer Flow"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Gün</label>
                 <select
                   value={newSession.dayLabel}
-                  onChange={(e) => {
-                    const daysMap: Record<string, number> = { Pazartesi: 1, Salı: 2, Çarşamba: 3, Perşembe: 4, Cuma: 5, Cumartesi: 6, Pazar: 7 };
-                    setNewSession({ ...newSession, dayLabel: e.target.value, weekday: daysMap[e.target.value] || 1 });
-                  }}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#141418] p-2.5 text-sm text-white"
+                  onChange={(e) => setNewSession({ ...newSession, dayLabel: e.target.value })}
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 >
-                  {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                  {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"].map((day) => (
+                    <option key={day} value={day}>{day}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Saat Aralığı</label>
-                <div className="flex gap-2 mt-1">
+                <div className="flex items-center gap-2">
                   <input
+                    type="text"
+                    placeholder="09:00"
                     value={newSession.startTime}
                     onChange={(e) => setNewSession({ ...newSession, startTime: e.target.value })}
-                    placeholder="09:00"
-                    className="w-1/2 rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                    className="w-1/2 rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                   />
+                  <span className="text-white">-</span>
                   <input
+                    type="text"
+                    placeholder="09:50"
                     value={newSession.endTime}
                     onChange={(e) => setNewSession({ ...newSession, endTime: e.target.value })}
-                    placeholder="09:50"
-                    className="w-1/2 rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                    className="w-1/2 rounded-xl border border-white/10 bg-black/60 px-3 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Kapasite</label>
                 <input
                   type="number"
+                  placeholder="Kapasite (Örn: 5)"
                   value={newSession.capacity}
-                  onChange={(e) => setNewSession({ ...newSession, capacity: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  onChange={(e) => setNewSession({ ...newSession, capacity: parseInt(e.target.value, 10) || 4 })}
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Seviye</label>
                 <input
+                  type="text"
+                  placeholder="Seviye (Örn: Başlangıç - Orta)"
                   value={newSession.level}
                   onChange={(e) => setNewSession({ ...newSession, level: e.target.value })}
-                  placeholder="Başlangıç - Orta"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Açıklama</label>
                 <input
+                  type="text"
+                  placeholder="Açıklama"
                   value={newSession.description}
                   onChange={(e) => setNewSession({ ...newSession, description: e.target.value })}
-                  placeholder="Ders detay açıklaması"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
               </div>
-              <div className="md:col-span-3 flex justify-end">
-                <button type="submit" className="rounded-xl bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold text-black">
-                  Kaydet ve Canlıya Al
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingSession(false)}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]"
+                >
+                  Kaydet
                 </button>
               </div>
             </form>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sessionsList.map((session: any) => (
-              <div key={session.id} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
-                <div className="flex items-start justify-between">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sessionsList.map((item: any) => (
+              <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
+                <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#c9a66b]">{session.dayLabel}</span>
-                    <h3 className="font-serif text-xl font-light text-white">{session.title}</h3>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#c9a66b]">{item.dayLabel}</span>
+                    <h3 className="font-serif text-xl text-white">{item.title}</h3>
                   </div>
-                  <span className="text-xs text-[#e8e4dc]/50">{session.startTime} - {session.endTime}</span>
+                  <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-[#c9a66b]">{item.capacity} kişilik</span>
                 </div>
-                <p className="text-xs text-[#e8e4dc]/60">{session.description}</p>
-                <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] text-xs text-[#e8e4dc]/50">
-                  <span>Kapasite: {session.capacity} Kişi</span>
-                  <button onClick={() => handleDeleteSession(session.id)} className="text-rose-400 hover:underline">
-                    Sil
+                <p className="text-xs text-[#e8e4dc]/60">Saat: {item.startTime} — {item.endTime}</p>
+                <p className="text-xs text-[#e8e4dc]/50">{item.description}</p>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => handleDeleteSession(item.id)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Seansı Sil
                   </button>
                 </div>
               </div>
@@ -449,98 +641,104 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         </div>
       )}
 
-      {/* TAB 3: Paketler & Fiyatlar */}
+      {/* TAB 3: PACKAGES */}
       {activeTab === "packages" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-light text-white">Yatırım Paketleri ve Fiyatlar</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Üyelik Paketleri & Fiyat Listesi</h2>
+              <p className="text-xs text-[#e8e4dc]/50">Web sitesindeki resmi paket adlarını, fiyatlarını ve ders sayılarını yönetin.</p>
+            </div>
             <button
-              onClick={() => setIsAddingPackage(!isAddingPackage)}
-              className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b] px-5 py-2 text-xs font-semibold text-[#000000] hover:bg-[#d4af37]"
+              onClick={() => setIsAddingPackage(true)}
+              className="self-start sm:self-auto rounded-full bg-[#c9a66b] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
             >
-              {isAddingPackage ? "Kapat" : "+ Yeni Paket Ekle"}
+              + Yeni Paket Ekle
             </button>
           </div>
 
+          {/* Modal / Form for Package */}
           {isAddingPackage && (
-            <form onSubmit={handleCreatePackage} className="grid gap-4 rounded-2xl border border-[#c9a66b]/30 bg-[#0e0e12] p-6 md:grid-cols-3">
-              <div>
-                <label className="text-xs text-[#bfa38e]">Paket Adı</label>
+            <form onSubmit={handleCreatePackage} className="rounded-2xl border border-[#c9a66b]/30 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Yeni Üyelik Paketi Oluştur</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <input
+                  type="text"
+                  placeholder="Paket Adı (Örn: 2 Kişilik 8 Seans)"
                   required
                   value={newPackage.name}
                   onChange={(e) => setNewPackage({ ...newPackage, name: e.target.value })}
-                  placeholder="Örn. Denge 8'li Paket"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Fiyat (TL)</label>
                 <input
+                  type="text"
+                  placeholder="Fiyat (TL - Örn: 5500)"
                   required
                   value={newPackage.price}
                   onChange={(e) => setNewPackage({ ...newPackage, price: e.target.value })}
-                  placeholder="8500"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Ders Sayısı</label>
                 <input
                   type="number"
+                  placeholder="Seans Sayısı (Örn: 8)"
                   value={newPackage.sessionsCount}
-                  onChange={(e) => setNewPackage({ ...newPackage, sessionsCount: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-[#000000]"
+                  onChange={(e) => setNewPackage({ ...newPackage, sessionsCount: parseInt(e.target.value, 10) || 8 })}
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Geçerlilik (Gün)</label>
                 <input
-                  type="number"
-                  value={newPackage.durationDays}
-                  onChange={(e) => setNewPackage({ ...newPackage, durationDays: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-[#000000]"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Odak Metni</label>
-                <input
+                  type="text"
+                  placeholder="Odak Metni (Örn: 2 Kişilik Düet)"
                   value={newPackage.focus}
                   onChange={(e) => setNewPackage({ ...newPackage, focus: e.target.value })}
-                  placeholder="Düzenli gelişim"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">İçerik Özellikleri (Virgülle ayırın)</label>
                 <input
+                  type="text"
+                  placeholder="Açıklama"
+                  value={newPackage.description}
+                  onChange={(e) => setNewPackage({ ...newPackage, description: e.target.value })}
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
+                />
+                <input
+                  type="text"
+                  placeholder="İçerikler (virgülle ayırın)"
                   value={newPackage.includes}
                   onChange={(e) => setNewPackage({ ...newPackage, includes: e.target.value })}
-                  placeholder="Postür analizi, 8 seans, WhatsApp takibi"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
               </div>
-              <div className="md:col-span-3 flex justify-end">
-                <button type="submit" className="rounded-xl bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold text-black">
-                  Paketi Yayınla
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingPackage(false)}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]"
+                >
+                  Kaydet
                 </button>
               </div>
             </form>
           )}
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {packagesList.map((item: any) => (
-              <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase text-[#c9a66b]">{item.focus}</span>
-                  <span className="font-serif text-2xl text-white">{new Intl.NumberFormat("tr-TR").format(Number(item.price))} TL</span>
-                </div>
-                <h3 className="font-serif text-xl font-light text-white">{item.name}</h3>
-                <p className="text-xs text-[#e8e4dc]/60">{item.description}</p>
-                <div className="pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs text-[#e8e4dc]/50">
-                  <span>{item.sessionsCount} Ders / {item.durationDays} Gün</span>
-                  <button onClick={() => handleDeletePackage(item.id)} className="text-rose-400 hover:underline">
-                    Sil
+              <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-[#c9a66b]">{item.focus}</span>
+                <h3 className="font-serif text-xl text-white">{item.name}</h3>
+                <p className="font-serif text-3xl font-light text-[#c9a66b]">{Number(item.price).toLocaleString("tr-TR")} TL</p>
+                <p className="text-xs text-[#e8e4dc]/50">{item.sessionsCount} Seans — {item.durationDays} gün geçerli</p>
+                <p className="text-xs leading-relaxed text-[#e8e4dc]/70">{item.description}</p>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => handleDeletePackage(item.id)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Paketi Sil
                   </button>
                 </div>
               </div>
@@ -549,77 +747,87 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         </div>
       )}
 
-      {/* TAB 4: Eğitmen Kadrosu */}
+      {/* TAB 4: INSTRUCTORS */}
       {activeTab === "instructors" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-light text-white">Eğitmen Kadrosu</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Eğitmen Kadrosu</h2>
+              <p className="text-xs text-[#e8e4dc]/50">Stüdyo eğitmen kadrosunu ve uzmanlık alanlarını güncelleyin.</p>
+            </div>
             <button
-              onClick={() => setIsAddingInstructor(!isAddingInstructor)}
-              className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b] px-5 py-2 text-xs font-semibold text-[#000000] hover:bg-[#d4af37]"
+              onClick={() => setIsAddingInstructor(true)}
+              className="self-start sm:self-auto rounded-full bg-[#c9a66b] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
             >
-              {isAddingInstructor ? "Kapat" : "+ Yeni Eğitmen Ekle"}
+              + Eğitmen Ekle
             </button>
           </div>
 
+          {/* Modal / Form for Instructor */}
           {isAddingInstructor && (
-            <form onSubmit={handleCreateInstructor} className="grid gap-4 rounded-2xl border border-[#c9a66b]/30 bg-[#0e0e12] p-6 md:grid-cols-2">
-              <div>
-                <label className="text-xs text-[#bfa38e]">Ad Soyad</label>
+            <form onSubmit={handleCreateInstructor} className="rounded-2xl border border-[#c9a66b]/30 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Yeni Eğitmen Ekle</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <input
+                  type="text"
+                  placeholder="Ad Soyad"
                   required
                   value={newInstructor.fullName}
                   onChange={(e) => setNewInstructor({ ...newInstructor, fullName: e.target.value })}
-                  placeholder="Örn. Aslı Çelik"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Unvan / Rol</label>
                 <input
-                  required
+                  type="text"
+                  placeholder="Unvan (Örn: Kurucu Eğitmen)"
                   value={newInstructor.role}
                   onChange={(e) => setNewInstructor({ ...newInstructor, role: e.target.value })}
-                  placeholder="Kurucu Eğitmen"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Uzmanlıklar (Virgülle ayırın)</label>
                 <input
+                  type="text"
+                  placeholder="Uzmanlıklar (virgülle ayırın)"
                   value={newInstructor.specialties}
                   onChange={(e) => setNewInstructor({ ...newInstructor, specialties: e.target.value })}
-                  placeholder="Reformer Pilates, Postür Düzeltme"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Biyografi</label>
                 <input
+                  type="text"
+                  placeholder="Biyografi / Açıklama"
                   value={newInstructor.bio}
                   onChange={(e) => setNewInstructor({ ...newInstructor, bio: e.target.value })}
-                  placeholder="Eğitmen öz geçmişi"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
               </div>
-              <div className="md:col-span-2 flex justify-end">
-                <button type="submit" className="rounded-xl bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold text-black">
-                  Eğitmeni Kaydet
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingInstructor(false)}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]"
+                >
+                  Kaydet
                 </button>
               </div>
             </form>
           )}
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {instructorsList.map((coach: any) => (
-              <div key={coach.id} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
-                <h3 className="font-serif text-xl font-light text-white">{coach.fullName}</h3>
-                <p className="text-xs text-[#c9a66b]">{coach.role}</p>
-                <p className="text-xs text-[#e8e4dc]/60">{coach.bio}</p>
-                <div className="pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs text-[#e8e4dc]/50">
-                  <span>Deneyim: {coach.experienceYears} Yıl</span>
-                  <button onClick={() => handleDeleteInstructor(coach.id)} className="text-rose-400 hover:underline">
-                    Sil
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {instructorsList.map((item: any) => (
+              <div key={item.id} className="relative rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-3">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-[#c9a66b]">{item.role}</span>
+                <h3 className="font-serif text-xl text-white">{item.fullName}</h3>
+                <p className="text-xs leading-relaxed text-[#e8e4dc]/70">{item.bio}</p>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => handleDeleteInstructor(item.id)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Eğitmeni Sil
                   </button>
                 </div>
               </div>
@@ -628,93 +836,173 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
         </div>
       )}
 
-      {/* TAB 5: Fotoğraf Albümü */}
+      {/* TAB 5: GALLERY */}
       {activeTab === "gallery" && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-light text-white">Fotoğraf Albümü Yönetimi</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Fotoğraf Albümü Yönetimi</h2>
+              <p className="text-xs text-[#e8e4dc]/50">Web sitesi ve /galeri sayfasındaki fotoğrafları ekleyin veya düzenleyin.</p>
+            </div>
             <button
-              onClick={() => setIsAddingGallery(!isAddingGallery)}
-              className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b] px-5 py-2 text-xs font-semibold text-[#000000] hover:bg-[#d4af37]"
+              onClick={() => setIsAddingGallery(true)}
+              className="self-start sm:self-auto rounded-full bg-[#c9a66b] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37]"
             >
-              {isAddingGallery ? "Kapat" : "+ Yeni Fotoğraf Ekle"}
+              + Fotoğraf Ekle
             </button>
           </div>
 
+          {/* Modal / Form for Gallery */}
           {isAddingGallery && (
-            <form onSubmit={handleCreateGallery} className="grid gap-4 rounded-2xl border border-[#c9a66b]/30 bg-[#0e0e12] p-6 md:grid-cols-2">
-              <div>
-                <label className="text-xs text-[#bfa38e]">Fotoğraf Başlığı</label>
+            <form onSubmit={handleCreateGallery} className="rounded-2xl border border-[#c9a66b]/30 bg-[#121216] p-6 space-y-4">
+              <h3 className="font-serif text-xl text-[#c9a66b]">Yeni Fotoğraf Ekle</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <input
+                  type="text"
+                  placeholder="Başlık (Örn: Reformer Seans Alanı)"
                   required
                   value={newGallery.title}
                   onChange={(e) => setNewGallery({ ...newGallery, title: e.target.value })}
-                  placeholder="Örn. Özel Reformer Seansı"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Görsel URL / Yol (Örn: /asli-celik-reformer.jpg)</label>
                 <input
+                  type="text"
+                  placeholder="Görsel URL veya /asli-celik-reformer.jpg"
                   required
                   value={newGallery.imageUrl}
                   onChange={(e) => setNewGallery({ ...newGallery, imageUrl: e.target.value })}
-                  placeholder="/asli-celik-reformer.jpg"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Kategori</label>
                 <select
                   value={newGallery.category}
                   onChange={(e) => setNewGallery({ ...newGallery, category: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#141418] p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 >
                   <option value="Stüdyomuz">Stüdyomuz</option>
                   <option value="Eğitmen & Seans">Eğitmen & Seans</option>
                   <option value="Ekipmanlar">Ekipmanlar</option>
                 </select>
-              </div>
-              <div>
-                <label className="text-xs text-[#bfa38e]">Açıklama</label>
                 <input
+                  type="text"
+                  placeholder="Açıklama (İsteğe bağlı)"
                   value={newGallery.description}
                   onChange={(e) => setNewGallery({ ...newGallery, description: e.target.value })}
-                  placeholder="Fotoğraf kısa açıklaması"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-sm text-white"
+                  className="rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
                 />
               </div>
-              <div className="md:col-span-2 flex justify-end">
-                <button type="submit" className="rounded-xl bg-[#c9a66b] px-6 py-2.5 text-xs font-semibold text-black">
-                  Fotoğrafı Albüme Ekle
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingGallery(false)}
+                  className="rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:text-white"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-[#c9a66b] px-6 py-2 text-xs font-semibold text-black hover:bg-[#d4af37]"
+                >
+                  Kaydet
                 </button>
               </div>
             </form>
           )}
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {galleryList.map((item: any) => (
-              <div key={item.id} className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-3 space-y-3">
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    fill
-                    className="object-cover transition duration-300 group-hover:scale-105"
-                  />
+              <div key={item.id} className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-4 space-y-3">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black">
+                  <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
                 </div>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[10px] font-semibold uppercase text-[#c9a66b]">{item.category}</span>
-                    <h3 className="text-sm font-medium text-white">{item.title}</h3>
-                  </div>
-                  <button onClick={() => handleDeleteGallery(item.id)} className="text-xs text-rose-400 hover:underline">
-                    Sil
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase text-[#c9a66b] font-medium">{item.category}</span>
+                  <h4 className="font-serif text-lg text-white">{item.title}</h4>
+                </div>
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={() => handleDeleteGallery(item.id)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Fotoğrafı Sil
                   </button>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* TAB 6: SECURITY / CREDENTIALS */}
+      {activeTab === "security" && (
+        <div className="mx-auto max-w-xl space-y-6">
+          <div>
+            <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Yönetim Şifresi ve Kullanıcı Adı Değiştirme</h2>
+            <p className="text-xs text-[#e8e4dc]/50">Yönetim paneline giriş bilgilerinizi istediğiniz zaman güncelleyebilirsiniz.</p>
+          </div>
+
+          {credMessage && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-300 font-medium">
+              {credMessage}
+            </div>
+          )}
+
+          {credError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-400 font-medium">
+              {credError}
+            </div>
+          )}
+
+          <form onSubmit={handleUpdateCredentials} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#bfa38e]">
+                Mevcut Şifre
+              </label>
+              <input
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
+                placeholder="Mevcut şifreniz"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#bfa38e]">
+                Yeni Kullanıcı Adı
+              </label>
+              <input
+                type="text"
+                required
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
+                placeholder="admin"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#bfa38e]">
+                Yeni Şifre
+              </label>
+              <input
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/60 px-4 py-2.5 text-sm text-white outline-none focus:border-[#c9a66b]"
+                placeholder="Yeni şifreniz"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isUpdatingCreds}
+              className="w-full rounded-full bg-[#c9a66b] py-3 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-[#d4af37] disabled:opacity-50"
+            >
+              {isUpdatingCreds ? "Güncelleniyor..." : "Giriş Bilgilerini Güncelle"}
+            </button>
+          </form>
         </div>
       )}
     </div>

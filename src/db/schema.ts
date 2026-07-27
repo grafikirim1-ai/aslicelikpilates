@@ -118,6 +118,13 @@ export const gallery = pgTable("acp_gallery", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const adminUsers = pgTable("acp_admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 80 }).notNull().default("admin"),
+  password: varchar("password", { length: 160 }).notNull().default("admin"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const instructorRelations = relations(instructors, ({ many }) => ({
   sessions: many(sessions),
 }));
