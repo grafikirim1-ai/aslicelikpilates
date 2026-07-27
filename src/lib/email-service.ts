@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
+import nodemailer from "nodemailer";
 
 export type SessionReminderParams = {
   memberId: number;
@@ -128,6 +129,31 @@ export function buildSessionReminderHtml(params: SessionReminderParams): string 
 
 export async function queueReminderNotification(params: SessionReminderParams) {
   const htmlContent = buildSessionReminderHtml(params);
+
+  // Send real email via SMTP if credentials are configured
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
+  if (smtpHost && smtpUser && smtpPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: Number(process.env.SMTP_PORT) === 465,
+        auth: { user: smtpUser, pass: smtpPass },
+      });
+
+      await transporter.sendMail({
+        from: `"Aslı Çelik Pilates" <${smtpUser}>`,
+        to: params.memberEmail,
+        subject: `Bugün Seansınız Var: ${params.sessionTitle} (${params.startTime})`,
+        html: htmlContent,
+      });
+    } catch (err: any) {
+      console.error("SMTP error sending email:", err);
+    }
+  }
 
   const [notif] = await db
     .insert(notifications)
