@@ -609,43 +609,64 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
   }
 
   // LOGGED IN ADMIN DASHBOARD
+  const tabs = [
+    { id: "members",     label: "Üyeler",    shortLabel: "Üyeler",    icon: "👥", count: membersList.length },
+    { id: "inquiries",   label: "Başvurular", shortLabel: "Başvuru",  icon: "📋", count: inquiriesList.length },
+    { id: "sessions",    label: "Seanslar",  shortLabel: "Seans",     icon: "📅", count: sessionsList.length },
+    { id: "packages",    label: "Paketler",  shortLabel: "Paket",     icon: "💎", count: packagesList.length },
+    { id: "instructors", label: "Eğitmenler", shortLabel: "Eğitmen", icon: "🏋️", count: instructorsList.length },
+    { id: "gallery",     label: "Albüm",     shortLabel: "Albüm",     icon: "🖼️", count: galleryList.length },
+    { id: "security",    label: "Ayarlar",   shortLabel: "Ayar",      icon: "⚙️", count: null },
+  ];
+  const currentTab = tabs.find(t => t.id === activeTab);
+
   return (
-    <div className="space-y-8">
-      {/* Navigation Tabs */}
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-        <div className="flex overflow-x-auto scrollbar-none gap-2 sm:gap-3 py-1">
-          {[
-            { id: "members", label: "👥 Üyeler & Tahsilat", count: membersList.length },
-            { id: "inquiries", label: "Başvurular", count: inquiriesList.length },
-            { id: "sessions", label: "Seanslar", count: sessionsList.length },
-            { id: "packages", label: "Paketler", count: packagesList.length },
-            { id: "instructors", label: "Eğitmenler", count: instructorsList.length },
-            { id: "gallery", label: "Fotoğraf Albümü", count: galleryList.length },
-            { id: "security", label: "🔑 Şifre & Ayarlar", count: null },
-          ].map((tab) => (
+    <div className="space-y-6 pb-24 lg:pb-0">
+
+      {/* ===== MOBILE HEADER BAR ===== */}
+      <div className="flex items-center justify-between lg:hidden">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{currentTab?.icon}</span>
+          <div>
+            <p className="font-serif text-lg text-white leading-tight">{currentTab?.label}</p>
+            {currentTab?.count !== null && (
+              <p className="text-[11px] text-[#c9a66b]">{currentTab?.count} kayıt</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/20"
+        >
+          Çıkış
+        </button>
+      </div>
+
+      {/* ===== DESKTOP TAB BAR ===== */}
+      <div className="hidden lg:flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div className="flex overflow-x-auto scrollbar-none gap-2 py-1">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`shrink-0 rounded-full px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-medium tracking-wide transition ${
+              className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition ${
                 activeTab === tab.id
                   ? "bg-[#c9a66b] text-black shadow-lg shadow-[#c9a66b]/20"
                   : "border border-white/[0.08] bg-white/5 text-[#e8e4dc]/70 hover:border-[#c9a66b]/30 hover:text-white"
               }`}
             >
+              <span className="mr-1.5">{tab.icon}</span>
               {tab.label}
               {tab.count !== null && (
-                <span
-                  className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
-                    activeTab === tab.id ? "bg-black/20 text-black" : "bg-white/10 text-[#c9a66b]"
-                  }`}
-                >
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
+                  activeTab === tab.id ? "bg-black/20 text-black" : "bg-white/10 text-[#c9a66b]"
+                }`}>
                   {tab.count}
                 </span>
               )}
             </button>
           ))}
         </div>
-
         <button
           onClick={handleLogout}
           className="shrink-0 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/20"
@@ -653,6 +674,61 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
           Çıkış
         </button>
       </div>
+
+      {/* ===== MOBILE STICKY BOTTOM NAV ===== */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-white/[0.08] bg-[#050507]/95 backdrop-blur-xl">
+        {/* First row: 4 tabs */}
+        <div className="grid grid-cols-4 gap-0">
+          {tabs.slice(0, 4).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 transition-all ${
+                activeTab === tab.id ? "text-[#c9a66b]" : "text-[#e8e4dc]/50"
+              }`}
+            >
+              <span className="text-xl leading-none">{tab.icon}</span>
+              <span className="text-[9px] font-medium tracking-wide leading-tight mt-0.5">
+                {tab.shortLabel}
+              </span>
+              {tab.count !== null && tab.count > 0 && (
+                <span className={`text-[8px] font-bold ${activeTab === tab.id ? "text-[#c9a66b]" : "text-[#c9a66b]/60"}`}>
+                  {tab.count}
+                </span>
+              )}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 h-[2px] w-8 rounded-full bg-[#c9a66b]" />
+              )}
+            </button>
+          ))}
+        </div>
+        {/* Second row: remaining 3 tabs */}
+        <div className="grid grid-cols-3 gap-0 border-t border-white/[0.04]">
+          {tabs.slice(4).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 transition-all ${
+                activeTab === tab.id ? "text-[#c9a66b]" : "text-[#e8e4dc]/50"
+              }`}
+            >
+              <span className="text-xl leading-none">{tab.icon}</span>
+              <span className="text-[9px] font-medium tracking-wide leading-tight mt-0.5">
+                {tab.shortLabel}
+              </span>
+              {tab.count !== null && tab.count > 0 && (
+                <span className={`text-[8px] font-bold ${activeTab === tab.id ? "text-[#c9a66b]" : "text-[#c9a66b]/60"}`}>
+                  {tab.count}
+                </span>
+              )}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 h-[2px] w-8 rounded-full bg-[#c9a66b]" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {/* TAB 1: MEMBERS & FINANCIAL TRACKING */}
       {activeTab === "members" && (
