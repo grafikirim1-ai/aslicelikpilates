@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Users, ClipboardList, CalendarDays, Diamond, Dumbbell, Image as ImageIcon, Settings } from "lucide-react";
 
 type AdminClientProps = {
   initialData: any;
@@ -610,13 +611,13 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
   // LOGGED IN ADMIN DASHBOARD
   const tabs = [
-    { id: "members",     label: "Üyeler",    shortLabel: "Üyeler",    icon: "👥", count: membersList.length },
-    { id: "inquiries",   label: "Başvurular", shortLabel: "Başvuru",  icon: "📋", count: inquiriesList.length },
-    { id: "sessions",    label: "Seanslar",  shortLabel: "Seans",     icon: "📅", count: sessionsList.length },
-    { id: "packages",    label: "Paketler",  shortLabel: "Paket",     icon: "💎", count: packagesList.length },
-    { id: "instructors", label: "Eğitmenler", shortLabel: "Eğitmen", icon: "🏋️", count: instructorsList.length },
-    { id: "gallery",     label: "Albüm",     shortLabel: "Albüm",     icon: "🖼️", count: galleryList.length },
-    { id: "security",    label: "Ayarlar",   shortLabel: "Ayar",      icon: "⚙️", count: null },
+    { id: "members",     label: "Üyeler",    shortLabel: "Üyeler",    icon: Users, count: membersList.length },
+    { id: "inquiries",   label: "Başvurular", shortLabel: "Başvuru",  icon: ClipboardList, count: inquiriesList.length },
+    { id: "sessions",    label: "Seanslar",  shortLabel: "Seans",     icon: CalendarDays, count: sessionsList.length },
+    { id: "packages",    label: "Paketler",  shortLabel: "Paket",     icon: Diamond, count: packagesList.length },
+    { id: "instructors", label: "Eğitmenler", shortLabel: "Eğitmen", icon: Dumbbell, count: instructorsList.length },
+    { id: "gallery",     label: "Albüm",     shortLabel: "Albüm",     icon: ImageIcon, count: galleryList.length },
+    { id: "security",    label: "Ayarlar",   shortLabel: "Ayar",      icon: Settings, count: null },
   ];
   const currentTab = tabs.find(t => t.id === activeTab);
 
@@ -625,8 +626,8 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
       {/* ===== MOBILE HEADER BAR ===== */}
       <div className="flex items-center justify-between lg:hidden">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{currentTab?.icon}</span>
+        <div className="flex items-center gap-3">
+          {currentTab && <currentTab.icon className="h-6 w-6 text-[#c9a66b]" />}
           <div>
             <p className="font-serif text-lg text-white leading-tight">{currentTab?.label}</p>
             {currentTab?.count !== null && (
@@ -645,27 +646,30 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       {/* ===== DESKTOP TAB BAR ===== */}
       <div className="hidden lg:flex items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div className="flex overflow-x-auto scrollbar-none gap-2 py-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`shrink-0 rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition ${
-                activeTab === tab.id
-                  ? "bg-[#c9a66b] text-black shadow-lg shadow-[#c9a66b]/20"
-                  : "border border-white/[0.08] bg-white/5 text-[#e8e4dc]/70 hover:border-[#c9a66b]/30 hover:text-white"
-              }`}
-            >
-              <span className="mr-1.5">{tab.icon}</span>
-              {tab.label}
-              {tab.count !== null && (
-                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
-                  activeTab === tab.id ? "bg-black/20 text-black" : "bg-white/10 text-[#c9a66b]"
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center shrink-0 rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition ${
+                  activeTab === tab.id
+                    ? "bg-[#c9a66b] text-black shadow-lg shadow-[#c9a66b]/20"
+                    : "border border-white/[0.08] bg-white/5 text-[#e8e4dc]/70 hover:border-[#c9a66b]/30 hover:text-white"
+                }`}
+              >
+                <Icon className="mr-2 h-4 w-4" />
+                {tab.label}
+                {tab.count !== null && (
+                  <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
+                    activeTab === tab.id ? "bg-black/20 text-black" : "bg-white/10 text-[#c9a66b]"
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
         <button
           onClick={handleLogout}
@@ -676,56 +680,35 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       </div>
 
       {/* ===== MOBILE STICKY BOTTOM NAV ===== */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-white/[0.08] bg-[#050507]/95 backdrop-blur-xl">
-        {/* First row: 4 tabs */}
-        <div className="grid grid-cols-4 gap-0">
-          {tabs.slice(0, 4).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 transition-all ${
-                activeTab === tab.id ? "text-[#c9a66b]" : "text-[#e8e4dc]/50"
-              }`}
-            >
-              <span className="text-xl leading-none">{tab.icon}</span>
-              <span className="text-[9px] font-medium tracking-wide leading-tight mt-0.5">
-                {tab.shortLabel}
-              </span>
-              {tab.count !== null && tab.count > 0 && (
-                <span className={`text-[8px] font-bold ${activeTab === tab.id ? "text-[#c9a66b]" : "text-[#c9a66b]/60"}`}>
-                  {tab.count}
-                </span>
-              )}
-              {activeTab === tab.id && (
-                <span className="absolute bottom-0 h-[2px] w-8 rounded-full bg-[#c9a66b]" />
-              )}
-            </button>
-          ))}
-        </div>
-        {/* Second row: remaining 3 tabs */}
-        <div className="grid grid-cols-3 gap-0 border-t border-white/[0.04]">
-          {tabs.slice(4).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 transition-all ${
-                activeTab === tab.id ? "text-[#c9a66b]" : "text-[#e8e4dc]/50"
-              }`}
-            >
-              <span className="text-xl leading-none">{tab.icon}</span>
-              <span className="text-[9px] font-medium tracking-wide leading-tight mt-0.5">
-                {tab.shortLabel}
-              </span>
-              {tab.count !== null && tab.count > 0 && (
-                <span className={`text-[8px] font-bold ${activeTab === tab.id ? "text-[#c9a66b]" : "text-[#c9a66b]/60"}`}>
-                  {tab.count}
-                </span>
-              )}
-              {activeTab === tab.id && (
-                <span className="absolute bottom-0 h-[2px] w-8 rounded-full bg-[#c9a66b]" />
-              )}
-            </button>
-          ))}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-white/[0.08] bg-[#0c0c0e]/95 backdrop-blur-xl">
+        <div className="flex overflow-x-auto scrollbar-none snap-x pb-safe px-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`relative flex shrink-0 snap-center flex-col items-center justify-center min-w-[72px] flex-1 gap-1 py-3 transition-all ${
+                  activeTab === tab.id ? "text-[#c9a66b]" : "text-[#e8e4dc]/50 hover:text-white"
+                }`}
+              >
+                <div className="relative">
+                  <Icon className={`h-5 w-5 ${activeTab === tab.id ? "text-[#c9a66b]" : ""}`} />
+                  {tab.count !== null && tab.count > 0 && (
+                    <span className={`absolute -top-1.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${
+                      activeTab === tab.id ? "bg-[#c9a66b] text-black" : "bg-white/15 text-white"
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium tracking-wide mt-1">{tab.shortLabel}</span>
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 h-[2px] w-8 rounded-full bg-[#c9a66b]" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
