@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { members } from "@/db/schema";
+import { members, instructors } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { queueWelcomeNotification } from "@/lib/email-service";
+import {
+  queueWelcomeNotification,
+  queueInstructorAssignmentNotification,
+  queueMemberApprovalNotification,
+} from "@/lib/email-service";
 
 export async function GET() {
   try {
@@ -152,6 +156,38 @@ export async function PATCH(req: Request) {
       .set(updateData)
       .where(eq(members.id, id))
       .returning();
+
+    // Instant Notification Trigger upon Instructor Assignment / Member Approval
+    if (instructorId !== undefined && updateData.instructorId) {
+      const [assignedInst] = await db
+        .select()
+        .from(instructors)
+        .where(eq(instructors.id, updateData.instructorId));
+
+      if (assignedInst) {
+        // 1. Send Instant Email to Member
+        if (updated.email) {
+          queueMemberApprovalNotification({
+            memberEmail: updated.email,
+            memberName: updated.fullName,
+            packageName: updated.packageName,
+            instructorName: assignedInst.fullName,
+          }).catch((err) => console.error("Instant Member Approval Email Error:", err));
+        }
+
+        // 2. Send Instant Email to Instructor
+        if (assignedInst.email) {
+          queueInstructorAssignmentNotification({
+            instructorEmail: assignedInst.email,
+            instructorName: assignedInst.fullName,
+            memberName: updated.fullName,
+            memberPhone: updated.phone,
+            packageName: updated.packageName,
+            notes: updated.notes,
+          }).catch((err) => console.error("Instant Instructor Assignment Email Error:", err));
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true, member: updated });
   } catch (error: any) {

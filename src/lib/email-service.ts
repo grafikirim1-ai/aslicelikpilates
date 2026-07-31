@@ -465,3 +465,195 @@ export async function queuePaymentOverdueNotification(params: PaymentOverduePara
 
   return { notif, htmlContent };
 }
+
+// 5. INSTANT MEMBER APPROVAL EMAIL (Üyeye Eğitmen Ataması ve Kayıt Onay Maili)
+export async function queueMemberApprovalNotification(params: {
+  memberEmail: string;
+  memberName: string;
+  packageName: string;
+  instructorName: string;
+}) {
+  if (!params.memberEmail) return null;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Üye Kaydınız & Eğitmen Atamanız Onaylandı | Aslı Çelik Pilates</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #050507; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #f5f3f0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #050507; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; background-color: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; overflow: hidden;">
+          <tr>
+            <td align="center" style="padding: 35px 30px 20px 30px; background-color: #000000; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <h1 style="margin: 0; font-family: Georgia, serif; font-size: 24px; color: #c9a66b; font-weight: 300; letter-spacing: 2px;">ASLI ÇELİK PILATES</h1>
+              <p style="margin: 5px 0 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: #bfa38e;">Studio & Reformer Academy</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #10b981; font-weight: 600;">✅ Kaydınız & Eğitmen Atamanız Onaylandı</p>
+              <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
+                Sayın <span style="color: #c9a66b;">${params.memberName}</span>,
+              </h2>
+              <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
+                Stüdyomuza yaptığınız üyelik başvurusu ve kayıt onaylanmış olup kişisel reformer pilates eğitmeniniz atanmıştır!
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; margin-bottom: 25px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Atama Bilgileri</p>
+                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Atanan Eğitmeniniz:</strong> <span style="color: #c9a66b;">${params.instructorName}</span></p>
+                    <p style="margin: 0; font-size: 14px; color: #f5f3f0;"><strong>Paketiniz:</strong> ${params.packageName}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0; font-size: 13px; color: rgba(232, 228, 220, 0.6); text-align: center; line-height: 1.6;">
+                İlk seans saatlerinizi belirlemek ve ders takvimi oluşturmak için eğitmeniniz veya stüdyo danışmanımız sizinle kısa süre içinde iletişime geçecektir.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding: 20px 30px; background-color: #000000; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: rgba(232, 228, 220, 0.4);">
+              © Aslı Çelik Pilates Studio — Otomatik Anlık Atama Bildirim Sistemi
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  const transporter = getTransporter();
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"Aslı Çelik Pilates" <${process.env.SMTP_USER}>`,
+        to: params.memberEmail,
+        subject: `✅ Kaydınız ve Eğitmeniniz Onaylandı: ${params.instructorName}`,
+        html: htmlContent,
+      });
+    } catch (err: any) {
+      console.error("SMTP Member Approval Email Error:", err);
+    }
+  }
+
+  const [notif] = await db
+    .insert(notifications)
+    .values({
+      channel: "email",
+      recipient: params.memberEmail,
+      title: `Eğitmen Ataması Onaylandı: ${params.instructorName}`,
+      message: `Sayın ${params.memberName}, ${params.instructorName} eğitmeniniz olarak atanmış ve kaydınız onaylanmıştır.`,
+      eventType: "member_approved",
+      status: "sent",
+    })
+    .returning();
+
+  return { notif, htmlContent };
+}
+
+// 6. INSTANT INSTRUCTOR ASSIGNMENT EMAIL (Eğitmene Yeni Öğrenci Atama Maili)
+export async function queueInstructorAssignmentNotification(params: {
+  instructorEmail: string;
+  instructorName: string;
+  memberName: string;
+  memberPhone: string;
+  packageName: string;
+  notes?: string | null;
+}) {
+  if (!params.instructorEmail) return null;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Yeni Pilates Öğrencisi Atandı | Aslı Çelik Pilates</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #050507; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #f5f3f0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #050507; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; background-color: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; overflow: hidden;">
+          <tr>
+            <td align="center" style="padding: 35px 30px 20px 30px; background-color: #000000; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <h1 style="margin: 0; font-family: Georgia, serif; font-size: 24px; color: #c9a66b; font-weight: 300; letter-spacing: 2px;">ASLI ÇELİK PILATES</h1>
+              <p style="margin: 5px 0 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: #bfa38e;">Instructor Management Portal</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">🏋️‍♂️ Yeni Öğrenci Ataması</p>
+              <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
+                Merhaba <span style="color: #c9a66b;">${params.instructorName}</span>,
+              </h2>
+              <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
+                Stüdyo yönetimi tarafından kadronuza yeni bir pilates öğrencisi atanmıştır. Üye detayları aşağıdadır:
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(201, 166, 107, 0.08); border: 1px solid rgba(201, 166, 107, 0.3); border-radius: 16px; margin-bottom: 25px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Üye Adı:</strong> ${params.memberName}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>Telefon:</strong> ${params.memberPhone}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>Paket:</strong> ${params.packageName}</p>
+                    ${params.notes ? `<p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(232, 228, 220, 0.8); font-style: italic;"><strong>Sağlık / Seans Notu:</strong> "${params.notes}"</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0; font-size: 13px; color: rgba(232, 228, 220, 0.6); text-align: center; line-height: 1.6;">
+                Yönetim panelinize giriş yaparak üyeleriniz sekmesinden ders takibini ve seans düşümlerini gerçekleştirebilirsiniz.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding: 20px 30px; background-color: #000000; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: rgba(232, 228, 220, 0.4);">
+              © Aslı Çelik Pilates Studio — Eğitmen Otomasyon Portalı
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  const transporter = getTransporter();
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"Aslı Çelik Pilates" <${process.env.SMTP_USER}>`,
+        to: params.instructorEmail,
+        subject: `🏋️‍♂️ Yeni Pilates Öğrencisi Atandı: ${params.memberName}`,
+        html: htmlContent,
+      });
+    } catch (err: any) {
+      console.error("SMTP Instructor Assignment Email Error:", err);
+    }
+  }
+
+  const [notif] = await db
+    .insert(notifications)
+    .values({
+      channel: "email",
+      recipient: params.instructorEmail,
+      title: `Yeni Öğrenci Atandı: ${params.memberName}`,
+      message: `Sayın ${params.instructorName}, ${params.memberName} adlı yeni üye kadronuza atanmıştır.`,
+      eventType: "instructor_assigned",
+      status: "sent",
+    })
+    .returning();
+
+  return { notif, htmlContent };
+}
+
