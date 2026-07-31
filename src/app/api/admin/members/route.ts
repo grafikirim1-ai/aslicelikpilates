@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { members } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { queueWelcomeNotification } from "@/lib/email-service";
 
 export async function GET() {
   try {
@@ -73,6 +74,16 @@ export async function POST(req: Request) {
         notes: notes ? notes.trim() : null,
       })
       .returning();
+
+    if (inserted && inserted.email) {
+      queueWelcomeNotification({
+        memberId: inserted.id,
+        memberName: inserted.fullName,
+        memberEmail: inserted.email,
+        packageName: inserted.packageName,
+        totalSessions: inserted.totalSessions,
+      }).catch((err) => console.error("Welcome email queue error:", err));
+    }
 
     return NextResponse.json({ ok: true, member: inserted });
   } catch (error: any) {

@@ -1,102 +1,148 @@
 import { NextResponse } from "next/server";
-import { queueReminderNotification, queuePaymentOverdueNotification } from "@/lib/email-service";
+import {
+  queueWelcomeNotification,
+  queueLowSessionsNotification,
+  queueReminderNotification,
+  queuePaymentOverdueNotification,
+} from "@/lib/email-service";
+import { db } from "@/db";
+import { members } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  return executeAutomatedTest(req);
+  return executeEmailTest(req);
 }
 
 export async function POST(req: Request) {
-  return executeAutomatedTest(req);
+  return executeEmailTest(req);
 }
 
-async function executeAutomatedTest(req: Request) {
+async function executeEmailTest(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const customEmail = searchParams.get("email");
-    const previewType = searchParams.get("preview"); // 'reminder' | 'payment'
+    const targetEmail = searchParams.get("email");
+    const previewType = searchParams.get("preview"); // 'welcome' | 'low_sessions' | 'reminder' | 'payment'
 
-    // If html preview is requested for browser view
-    if (previewType === "payment") {
-      const html = queuePaymentOverdueNotification({
+    // HTML Previews for testing design in browser
+    if (previewType === "welcome") {
+      const result = await queueWelcomeNotification({
         memberId: 999,
-        memberName: "Süleyman Bey / Fatih Bey",
-        memberEmail: "test@prosigma.net",
+        memberName: "Selin Yılmaz",
+        memberEmail: targetEmail || "selin@example.com",
+        packageName: "Bireysel 8 Seans Reformer",
+        totalSessions: 8,
+        instructorName: "Aslı Çelik",
+      });
+      return new NextResponse(result?.htmlContent, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
+    if (previewType === "low_sessions") {
+      const result = await queueLowSessionsNotification({
+        memberId: 999,
+        memberName: "Selin Yılmaz",
+        memberEmail: targetEmail || "selin@example.com",
+        packageName: "Bireysel 8 Seans Reformer",
+        remainingSessions: 1,
+        totalSessions: 8,
+      });
+      return new NextResponse(result?.htmlContent, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
+    if (previewType === "payment") {
+      const result = await queuePaymentOverdueNotification({
+        memberId: 999,
+        memberName: "Selin Yılmaz",
+        memberEmail: targetEmail || "selin@example.com",
         packageName: "Bireysel 16 Seans Reformer",
         totalPrice: 15000,
         paidAmount: 10000,
       });
-      return new NextResponse((await html).htmlContent, {
+      return new NextResponse(result?.htmlContent, {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
 
     if (previewType === "reminder") {
-      const html = queueReminderNotification({
+      const result = await queueReminderNotification({
         memberId: 999,
-        memberName: "Süleyman Bey / Fatih Bey",
-        memberEmail: "test@prosigma.net",
+        memberName: "Selin Yılmaz",
+        memberEmail: targetEmail || "selin@example.com",
         sessionTitle: "Reformer Akışı & Omurga Sağlığı",
         dayLabel: "Cuma",
         startTime: "16:00",
         endTime: "16:50",
         coachName: "Aslı Çelik",
       });
-      return new NextResponse((await html).htmlContent, {
+      return new NextResponse(result?.htmlContent, {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
 
-    // Default target emails requested by the user
-    const targetEmails = customEmail ? [customEmail] : ["suleyman@prosigma.net", "fatih@prosigma.net"];
-
-    const dispatchedLogs = [];
-
-    for (const email of targetEmails) {
-      // 1. Send Session Reminder Email
-      const reminderResult = await queueReminderNotification({
-        memberId: 101,
-        memberName: email.includes("suleyman") ? "Süleyman Bey" : "Fatih Bey",
-        memberEmail: email,
-        sessionTitle: "Özel Reformer Pilates Seansı",
-        dayLabel: "Bugün (Cuma)",
-        startTime: "16:00",
-        endTime: "16:50",
-        coachName: "Aslı Çelik",
-        location: "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara",
+    // If specific email is passed, dispatch tailored test to that email
+    if (targetEmail) {
+      const welcome = await queueWelcomeNotification({
+        memberId: 999,
+        memberName: "Değerli Üyemiz",
+        memberEmail: targetEmail,
+        packageName: "Bireysel 8 Seans Reformer",
+        totalSessions: 8,
       });
 
-      // 2. Send Payment Overdue / Balance Email
-      const paymentResult = await queuePaymentOverdueNotification({
-        memberId: 102,
-        memberName: email.includes("suleyman") ? "Süleyman Bey" : "Fatih Bey",
-        memberEmail: email,
-        packageName: "Bireysel 16 Seans Reformer",
-        totalPrice: 15000,
-        paidAmount: 10000,
+      const low = await queueLowSessionsNotification({
+        memberId: 999,
+        memberName: "Değerli Üyemiz",
+        memberEmail: targetEmail,
+        packageName: "Bireysel 8 Seans Reformer",
+        remainingSessions: 2,
+        totalSessions: 8,
       });
 
-      dispatchedLogs.push({
-        email,
-        sessionReminderNotificationId: reminderResult.notif.id,
-        paymentOverdueNotificationId: paymentResult.notif.id,
-        status: "SUCCESSFULLY_QUEUED_AND_DISPATCHED",
+      return NextResponse.json({
+        success: true,
+        message: `Üyeye özel e-posta testleri '${targetEmail}' adresine gönderildi.`,
+        welcomeNotificationId: welcome?.notif?.id,
+        lowSessionsNotificationId: low?.notif?.id,
       });
+    }
+
+    // Default: Dispatch strictly to registered DB members with emails
+    const dbMembers = await db.select().from(members);
+    const dispatchedMembers = [];
+
+    for (const m of dbMembers) {
+      if (m.email && m.email.includes("@")) {
+        if (m.remainingSessions <= 2 && m.remainingSessions > 0) {
+          await queueLowSessionsNotification({
+            memberId: m.id,
+            memberName: m.fullName,
+            memberEmail: m.email,
+            packageName: m.packageName,
+            remainingSessions: m.remainingSessions,
+            totalSessions: m.totalSessions,
+          });
+        }
+        dispatchedMembers.push({ id: m.id, name: m.fullName, email: m.email });
+      }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Otonom test e-postaları suleyman@prosigma.net ve fatih@prosigma.net adreslerine başarıyla gönderildi ve veritabanı kayıtlarına işlendi.`,
-      dispatchedCount: dispatchedLogs.length * 2, // 2 emails per address
-      targetEmails,
-      logs: dispatchedLogs,
+      message: `Tüm kayıtlı üyelerin kendi e-posta adreslerine otonom bildirimler gönderildi.`,
+      membersProcessedCount: dispatchedMembers.length,
+      dispatchedMembers,
       previews: {
-        sessionReminderPreviewUrl: `/api/admin/send-test-email?preview=reminder`,
-        paymentOverduePreviewUrl: `/api/admin/send-test-email?preview=payment`,
+        welcomeEmailPreview: `/api/admin/send-test-email?preview=welcome`,
+        lowSessionsEmailPreview: `/api/admin/send-test-email?preview=low_sessions`,
+        sessionReminderPreview: `/api/admin/send-test-email?preview=reminder`,
+        paymentOverduePreview: `/api/admin/send-test-email?preview=payment`,
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "E-posta gönderimi başarısız oldu" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "E-posta gönderimi başarısız" }, { status: 500 });
   }
 }
