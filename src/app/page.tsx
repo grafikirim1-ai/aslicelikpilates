@@ -297,6 +297,65 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Haftalık Akış / Seans Programı Section */}
+      <section id="seanslar" className="relative overflow-hidden bg-[#050507] border-t border-white/[0.06]">
+        <div className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-36">
+          <div className="mx-auto max-w-3xl text-center space-y-4">
+            <SectionLabel label="Haftalık Akış" />
+            <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-6xl">
+              Seanslarınız <br />
+              <span className="italic text-[#c9a66b]">rutin değil, ritim.</span>
+            </h2>
+            <GoldLine />
+            <p className="text-base leading-[1.85] text-[#e8e4dc]/70">
+              Haftanın her gününe özel akışlar; sabah, öğlen ve akşam saatlerine göre şekillenir.
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {(data.sessions || []).map((session) => (
+              <div
+                key={session.id}
+                className="rounded-[2rem] border border-white/[0.08] bg-[#0c0c0e] p-8 shadow-2xl transition duration-300 hover:border-[#c9a66b]/40 space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#bfa38e]">
+                    {session.dayLabel}
+                  </span>
+                  <span className="rounded-full border border-[#c9a66b]/30 bg-[#c9a66b]/10 px-3 py-1 text-[10px] font-medium text-[#c9a66b]">
+                    {session.level}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-serif text-2xl font-light text-[#f5f3f0]">
+                    {session.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-[#e8e4dc]/60">
+                    {session.description}
+                  </p>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-white/[0.06] text-xs">
+                  <div className="flex items-center justify-between text-[#e8e4dc]/70">
+                    <span className="uppercase tracking-widest text-[10px] text-[#bfa38e]">Saat</span>
+                    <span className="font-medium text-[#f5f3f0]">{session.startTime} — {session.endTime}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#e8e4dc]/70">
+                    <span className="uppercase tracking-widest text-[10px] text-[#bfa38e]">Eğitmen</span>
+                    <span className="font-medium text-[#f5f3f0]">{session.coachName || "Aslı Çelik"}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#e8e4dc]/70">
+                    <span className="uppercase tracking-widest text-[10px] text-[#bfa38e]">Kapasite</span>
+                    <span className="font-medium text-[#c9a66b]">{session.capacity} kişi</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Hakkımızda Section */}
       <section id="hakkimizda" className="relative overflow-hidden bg-[#121822]">
         <div className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">

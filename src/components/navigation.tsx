@@ -19,6 +19,7 @@ export default function Navigation() {
   const links = [
     { label: "Stüdyo", href: "/#stüdyo" },
     { label: "Neden Pilates?", href: "/#neden-pilates" },
+    { label: "Seanslar", href: "/#seanslar" },
     { label: "Hakkımızda", href: "/#hakkimizda" },
     { label: "Galeri", href: "/galeri" },
     { label: "İletişim", href: "/#iletisim" },
