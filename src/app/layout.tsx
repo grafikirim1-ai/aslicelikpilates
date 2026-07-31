@@ -18,9 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Aslı Çelik Pilates | Etimesgut Bağlıca Butik Pilates Stüdyosu",
+  title: "Ankara Fizyoterapist Destekli Pilates | Skolyoz, Bel Fıtığı, Fibromiyalji | Aslı Çelik Pilates",
   description:
-    "Aslı Çelik Pilates — zarif, kişisel ve sonuç odaklı reformer pilates deneyimi. Ankara Etimesgut Bağlıca'da butik stüdyo, profesyonel eğitmen kadrosu ve sürdürülebilir gelişim odaklı programlar.",
+    "Ankara’da fizyoterapist destekli Pilates dersleri. Skolyoz, bel ve boyun fıtığı, fibromiyalji, hamilelik ve duruş bozukluklarına yönelik kişiye özel Pilates programları. Güvenli, bilimsel ve profesyonel egzersiz yaklaşımı.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -1,8 +1,8 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { AnyPgTable } from "drizzle-orm/pg-core";
 
 import { db } from "@/db";
-import { inquiries, instructors, notifications, packages, sessions, gallery } from "@/db/schema";
+import { inquiries, instructors, notifications, packages, sessions, gallery, members } from "@/db/schema";
 
 async function countRows(table: AnyPgTable) {
   const result = await db.select({ count: sql<number>`count(*)` }).from(table);
@@ -10,6 +10,19 @@ async function countRows(table: AnyPgTable) {
 }
 
 export async function ensureSeedData() {
+  // Ensure DB columns exist for instructorId and status in acp_members
+  try {
+    await db.execute(sql`
+      ALTER TABLE acp_members ADD COLUMN IF NOT EXISTS instructor_id integer REFERENCES acp_instructors(id) ON DELETE SET NULL;
+      ALTER TABLE acp_members ADD COLUMN IF NOT EXISTS status varchar(40) NOT NULL DEFAULT 'active';
+      ALTER TABLE acp_sessions ADD COLUMN IF NOT EXISTS is_private boolean DEFAULT false;
+      ALTER TABLE acp_sessions ADD COLUMN IF NOT EXISTS member_id integer;
+      ALTER TABLE acp_sessions ADD COLUMN IF NOT EXISTS member_name varchar(120);
+    `);
+  } catch (err) {
+    console.error("DB Column migration check error:", err);
+  }
+
   const galleryCount = await countRows(gallery);
   if (galleryCount === 0) {
     await db.insert(gallery).values([
@@ -50,38 +63,74 @@ export async function ensureSeedData() {
       },
     ]);
   }
-  const instructorCount = await countRows(instructors);
+  // Ensure active instructors match exact team requested by user
+  const newInstructors = [
+    {
+      fullName: "Aslı Çelik",
+      role: "Kurucu Eğitmen, Master Pilates Koçu",
+      specialties: ["Reformer Pilates", "Postür Düzeltme"],
+      bio: "Kurucu Eğitmen ve Master Pilates Koçu olarak kişiye özel reformer ve omurga sağlığı seanslarını yönetmektedir.",
+      phone: "0543 219 42 20",
+      email: "asli@aslicelikpilates.com",
+      experienceYears: 12,
+    },
+    {
+      fullName: "Fulya Aydoğdu",
+      role: "Pilates Koçu",
+      specialties: ["Reformer Pilates", "Mat Pilates"],
+      bio: "Reformer ve Mat Pilates alanında uzman, hareket kalitesi ve kas aktivasyonuna odaklı pilates koçu.",
+      phone: "0543 219 42 20",
+      email: "fulya@aslicelikpilates.com",
+      experienceYears: 6,
+    },
+    {
+      fullName: "Özge Türkarslan",
+      role: "Fizyoterapist, Pilates Koçu",
+      specialties: ["Postür Düzeltme", "Core Güçlendirme"],
+      bio: "Fizyoterapi altyapısıyla postür analizi, omurga hizalaması ve klinik odaklı pilates programları yürütmektedir.",
+      phone: "0543 219 42 20",
+      email: "ozge@aslicelikpilates.com",
+      experienceYears: 5,
+    },
+    {
+      fullName: "Furkan Acaroğlu",
+      role: "Fizyoterapist, Pilates Koçu",
+      specialties: ["Postür Düzeltme", "Core Güçlendirme"],
+      bio: "Fizyoterapist eşliğinde omurga sağlığı, duruş bozuklukları ve fonksiyonel core güçlendirme çalışmaları sunmaktadır.",
+      phone: "0543 219 42 20",
+      email: "furkan@aslicelikpilates.com",
+      experienceYears: 5,
+    },
+  ];
 
-  if (instructorCount === 0) {
-    await db.insert(instructors).values([
-      {
-        fullName: "Aslı Çelik",
-        role: "Kurucu Eğitmen",
-        specialties: ["Reformer Pilates", "Postür Düzeltme", "Nefes Çalışmaları"],
-        bio: "12 yılı aşkın deneyimiyle kadın sağlığı, postür iyileştirme ve kişiye özel pilates programlarında uzmanlaşmış baş eğitmen.",
-        phone: "+90 530 000 00 01",
-        email: "asli@aslicelikpilates.com",
-        experienceYears: 12,
-      },
-      {
-        fullName: "Mina Erdem",
-        role: "Fonksiyonel Hareket Uzmanı",
-        specialties: ["Mat Pilates", "Hamile Pilatesi", "Mobilite"],
-        bio: "Güç, esneklik ve günlük yaşam konforunu aynı programda buluşturan akış temelli dersler tasarlar.",
-        phone: "+90 530 000 00 02",
-        email: "mina@aslicelikpilates.com",
-        experienceYears: 7,
-      },
-      {
-        fullName: "Selin Yıldız",
-        role: "Reformer & Core Coach",
-        specialties: ["Başlangıç Seviyesi", "Core Güçlendirme", "Duruş Analizi"],
-        bio: "Yeni başlayan üyeler için güvenli, motive edici ve sonuç odaklı reformer seansları yürütür.",
-        phone: "+90 530 000 00 03",
-        email: "selin@aslicelikpilates.com",
-        experienceYears: 5,
-      },
-    ]);
+  const existingInstructors = await db.select().from(instructors);
+  if (existingInstructors.length === 0) {
+    await db.insert(instructors).values(newInstructors);
+  } else {
+    for (const newInst of newInstructors) {
+      try {
+        const match = existingInstructors.find(
+          (inst) => inst.email === newInst.email || inst.fullName === newInst.fullName
+        );
+        if (match) {
+          await db
+            .update(instructors)
+            .set({
+              fullName: newInst.fullName,
+              role: newInst.role,
+              specialties: newInst.specialties,
+              bio: newInst.bio,
+              phone: newInst.phone,
+              experienceYears: newInst.experienceYears,
+            })
+            .where(eq(instructors.id, match.id));
+        } else {
+          await db.insert(instructors).values(newInst);
+        }
+      } catch (e) {
+        console.warn("Seed warning for instructor:", newInst.fullName);
+      }
+    }
   }
 
   const packageCount = await countRows(packages);
@@ -315,5 +364,74 @@ export async function ensureSeedData() {
         status: "logged",
       },
     ]);
+  }
+
+  const memberCount = await countRows(members);
+  if (memberCount === 0) {
+    const coachRows = await db.select().from(instructors);
+    if (coachRows.length > 0) {
+      await db.insert(members).values([
+        {
+          fullName: "Selin Yılmaz",
+          phone: "0532 111 22 33",
+          email: "selin@example.com",
+          packageName: "Bireysel 8 Seans",
+          totalSessions: 8,
+          remainingSessions: 5,
+          totalPrice: "8000.00",
+          paidAmount: "8000.00",
+          paymentStatus: "paid",
+          paymentMethod: "Kredi Kartı",
+          instructorId: coachRows[0]?.id,
+          status: "active",
+          notes: "Bel fıtığı hassasiyeti var, reformer direnci 1. seviyede tutulmalı.",
+        },
+        {
+          fullName: "Merve Demir",
+          phone: "0533 222 33 44",
+          email: "merve@example.com",
+          packageName: "Bireysel 16 Seans",
+          totalSessions: 16,
+          remainingSessions: 12,
+          totalPrice: "15000.00",
+          paidAmount: "15000.00",
+          paymentStatus: "paid",
+          paymentMethod: "EFT / Havale",
+          instructorId: coachRows[1]?.id || coachRows[0]?.id,
+          status: "active",
+          notes: "Postür düzeltme ve omuz mobilizasyonuna odaklanılıyor.",
+        },
+        {
+          fullName: "Deniz Kara",
+          phone: "0535 333 44 55",
+          email: "deniz@example.com",
+          packageName: "2 Kişilik 8 Seans (Düet)",
+          totalSessions: 8,
+          remainingSessions: 7,
+          totalPrice: "5500.00",
+          paidAmount: "5500.00",
+          paymentStatus: "paid",
+          paymentMethod: "Kredi Kartı",
+          instructorId: coachRows[2]?.id || coachRows[0]?.id,
+          status: "active",
+          notes: "Fizyoterapi desteğiyle skolyoz takibi yapılıyor.",
+        },
+        {
+          fullName: "Ayşe Çelik",
+          phone: "0536 444 55 66",
+          email: "ayse@example.com",
+          packageName: "Bireysel 8 Seans",
+          totalSessions: 8,
+          remainingSessions: 8,
+          totalPrice: "8000.00",
+          paidAmount: "0.00",
+          paymentStatus: "pending",
+          paymentMethod: "Nakit",
+          instructorId: null,
+          status: "pending",
+          notes: "Web sitesinden yeni üyelik başvurusu yaptı. Yönetici onayı bekliyor.",
+        },
+      ]);
+    }
   }
 }

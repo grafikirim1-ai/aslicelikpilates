@@ -18,10 +18,11 @@ export default function Navigation() {
 
   const links = [
     { label: "Stüdyo", href: "/#stüdyo" },
-    { label: "Program", href: "/#program" },
-    { label: "Paketler", href: "/#paketler" },
+    { label: "Neden Pilates?", href: "/#neden-pilates" },
+    { label: "Hakkımızda", href: "/#hakkimizda" },
     { label: "Galeri", href: "/galeri" },
     { label: "İletişim", href: "/#iletisim" },
+    { label: "Üye Kaydı", href: "/uye-kayit" },
   ];
 
   return (

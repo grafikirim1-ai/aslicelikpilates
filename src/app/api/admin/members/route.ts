@@ -26,6 +26,8 @@ export async function POST(req: Request) {
       paidAmount,
       paymentStatus,
       paymentMethod,
+      instructorId,
+      status: reqStatus,
       notes,
     } = body;
 
@@ -41,14 +43,17 @@ export async function POST(req: Request) {
     const totPrice = String(totalPrice || "8000");
     const pAmount = String(paidAmount || "8000");
 
-    let status = paymentStatus || "paid";
+    let pStatus = paymentStatus || "paid";
     if (Number(pAmount) >= Number(totPrice)) {
-      status = "paid";
+      pStatus = "paid";
     } else if (Number(pAmount) > 0) {
-      status = "partial";
+      pStatus = "partial";
     } else {
-      status = "pending";
+      pStatus = "pending";
     }
+
+    const memberStatus = reqStatus || "active";
+    const instId = instructorId ? parseInt(instructorId, 10) : null;
 
     const [inserted] = await db
       .insert(members)
@@ -61,8 +66,10 @@ export async function POST(req: Request) {
         remainingSessions: remSess,
         totalPrice: totPrice,
         paidAmount: pAmount,
-        paymentStatus: status,
+        paymentStatus: pStatus,
         paymentMethod: paymentMethod || "Kredi Kartı",
+        instructorId: instId,
+        status: memberStatus,
         notes: notes ? notes.trim() : null,
       })
       .returning();
@@ -76,7 +83,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, action, paidAmount, remainingSessions, notes } = body;
+    const { id, action, paidAmount, remainingSessions, instructorId, status, notes } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Member ID gereklidir." }, { status: 400 });
@@ -94,12 +101,16 @@ export async function PATCH(req: Request) {
       const newRem = Math.max(0, existing.remainingSessions - 1);
       updateData.remainingSessions = newRem;
     }
-    // Action 2: Manual Session Count Update
+    // Action 2: Increment Session (+1)
+    else if (action === "add_session") {
+      updateData.remainingSessions = existing.remainingSessions + 1;
+    }
+    // Action 3: Manual Session Count Update
     else if (remainingSessions !== undefined) {
       updateData.remainingSessions = Math.max(0, parseInt(remainingSessions, 10));
     }
 
-    // Action 3: Payment Amount Update
+    // Action 4: Payment Amount Update
     if (paidAmount !== undefined) {
       const newPaid = String(paidAmount);
       updateData.paidAmount = newPaid;
@@ -111,6 +122,14 @@ export async function PATCH(req: Request) {
       } else {
         updateData.paymentStatus = "pending";
       }
+    }
+
+    if (instructorId !== undefined) {
+      updateData.instructorId = instructorId ? parseInt(instructorId, 10) : null;
+    }
+
+    if (status !== undefined) {
+      updateData.status = status;
     }
 
     if (notes !== undefined) {

@@ -6,9 +6,9 @@ import { sessions } from "@/db/schema";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { title, sessionType, level, dayLabel, weekday, startTime, endTime, capacity, location, description, instructorId } = body;
+    const { title, sessionType, level, dayLabel, weekday, startTime, endTime, capacity, location, description, instructorId, isPrivate, memberId, memberName } = body;
 
-    const slug = `${title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`;
+    const slug = `${(title || "seans").toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`;
 
     const [inserted] = await db
       .insert(sessions)
@@ -26,6 +26,9 @@ export async function POST(req: Request) {
         description: description || "",
         instructorId: Number(instructorId) || 1,
         isFeatured: true,
+        isPrivate: Boolean(isPrivate),
+        memberId: memberId ? Number(memberId) : null,
+        memberName: memberName || null,
         isActive: true,
       })
       .returning();
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, title, dayLabel, weekday, startTime, endTime, capacity, location, description, isActive } = body;
+    const { id, title, dayLabel, weekday, startTime, endTime, capacity, location, description, isActive, isPrivate, memberId, memberName } = body;
 
     const [updated] = await db
       .update(sessions)
@@ -52,6 +55,9 @@ export async function PUT(req: Request) {
         capacity: Number(capacity),
         location,
         description,
+        isPrivate: Boolean(isPrivate),
+        memberId: memberId ? Number(memberId) : null,
+        memberName: memberName || null,
         isActive: Boolean(isActive),
       })
       .where(eq(sessions.id, Number(id)))

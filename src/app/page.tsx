@@ -66,10 +66,10 @@ export default async function HomePage() {
                   Ücretsiz Ön Görüşme
                 </a>
                 <a
-                  href="#program"
+                  href="#hakkimizda"
                   className="text-sm font-light text-[#e8e4dc]/60 underline underline-offset-4 decoration-[#c9a66b]/30 transition hover:text-[#f5f3f0]"
                 >
-                  Programı İnceleyin
+                  Hakkımızda
                 </a>
               </div>
             </div>
@@ -173,124 +173,179 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Program Section */}
-      <section id="program" className="relative overflow-hidden bg-[#050507]">
+      {/* Neden Pilates Section */}
+      <section id="neden-pilates" className="relative overflow-hidden bg-[#050507]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(201,166,107,0.08),_transparent_40%)]" />
-        <div className="relative mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
-          <div className="mx-auto max-w-2xl text-center">
-            <SectionLabel label="Haftalık Akış" />
+        <div className="relative mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-36">
+          <div className="mx-auto max-w-3xl text-center space-y-4">
+            <SectionLabel label="Bilimsel Yaklaşım" />
             <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-6xl">
-              Seanslarınız <br />
-              <span className="italic text-[#c9a66b]">rutin değil, ritim.</span>
+              Ankara’da Fizyoterapist Destekli <br />
+              <span className="italic text-[#c9a66b]">Kişiye Özel Pilates</span>
             </h2>
             <GoldLine />
-            <p className="text-[#e8e4dc]/60">Haftanın her gününe özel akışlar; sabah, öğlen ve akşam saatlerine göre şekillenir.</p>
+            <p className="text-lg font-light text-[#c9a66b]/90">
+              Bilimsel Yaklaşımla Güvenli ve Kişiye Özel Egzersiz
+            </p>
+            <p className="text-base leading-[1.85] text-[#e8e4dc]/70 pt-2">
+              Stüdyomuzda Pilates dersleri, fizyoterapistlerimiz ve uzman antrenörlerimizin iş birliğiyle planlanır. Her bireyin sağlık geçmişi, hareket kapasitesi ve hedefleri farklı olduğu için tüm programlarımız kişiye özel olarak hazırlanır.
+            </p>
+            <p className="text-sm leading-[1.8] text-[#e8e4dc]/60">
+              İlk değerlendirme sırasında duruş analizi, omurga hizalanması, eklem hareket açıklığı, kas kuvveti, esneklik, denge ve hareket kalitesi detaylı olarak incelenir. Bu değerlendirme sonucunda size en uygun egzersiz programı oluşturulur ve gelişiminiz düzenli olarak takip edilir.
+            </p>
           </div>
 
-          <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {data.sessions.map((session, i) => (
-              <article
-                key={session.id}
-                className="group rounded-[2rem] border border-white/[0.06] bg-[#0c0c0e]/80 p-7 transition hover:border-[#c9a66b]/30 hover:bg-[#121216] hover:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.7)]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#bfa38e]">{session.dayLabel}</p>
-                    <h3 className="mt-3 font-serif text-2xl font-light leading-snug text-[#f5f3f0]">{session.title}</h3>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-[#c9a66b]/20 bg-[#c9a66b]/8 px-3 py-1.5 text-[11px] font-medium text-[#c9a66b]">{session.level}</span>
-                </div>
-                <p className="mt-5 text-sm leading-[1.75] text-[#e8e4dc]/60">{session.description}</p>
-                <div className="mt-6 space-y-2 text-sm text-[#e8e4dc]/70">
-                  <div className="flex items-center justify-between border-b border-white/[0.05] pb-2">
-                    <span className="text-xs uppercase tracking-wider text-[#bfa38e]">Saat</span>
-                    <span className="font-medium">{session.startTime} — {session.endTime}</span>
-                  </div>
-                  <div className="flex items-center justify-between border-b border-white/[0.05] pb-2 pt-2">
-                    <span className="text-xs uppercase tracking-wider text-[#bfa38e]">Eğitmen</span>
-                    <span className="font-medium">{session.coachName}</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs uppercase tracking-wider text-[#bfa38e]">Kapasite</span>
-                    <span className="font-medium">{session.capacity} kişi</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Packages */}
-      <section id="paketler" className="bg-[#000000] text-[#f5f3f0]">
-        <div className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
-          <div className="mx-auto max-w-2xl text-center">
-            <SectionLabel label="Yatırım Programları" />
-            <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-6xl">
-              Size uygun <br />
-              <span className="italic text-[#c9a66b]">gelişim yolu.</span>
-            </h2>
-            <GoldLine />
-            <p className="text-[#e8e4dc]/60">Her paket, kişisel değerlendirme ile başlar; hedeflerinize göre şekillenir.</p>
-          </div>
-
-          <div className="mt-16 grid gap-6 lg:grid-cols-3">
-            {data.packages.map((item, i) => (
-              <article
-                key={item.id}
-                className={`relative overflow-hidden rounded-[2.5rem] border p-8 shadow-2xl transition hover:-translate-y-1 ${
-                  item.isPopular
-                    ? "border-[#c9a66b]/40 bg-gradient-to-b from-[#141419] to-[#0c0c0e] text-[#f5f3f0] shadow-black/70"
-                    : "border-white/[0.08] bg-[#0c0c0e] text-[#f5f3f0] hover:border-[#c9a66b]/30"
-                }`}
-              >
-                {item.isPopular && (
-                  <span className="absolute right-5 top-5 rounded-full border border-[#c9a66b]/30 bg-[#c9a66b]/15 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c9a66b]">
-                    En Popüler
-                  </span>
-                )}
-                <p className="text-xs font-medium uppercase tracking-[0.25em] text-[#bfa38e]">
-                  {item.focus}
+          <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {/* Card 1: Hangi Durumlarda Pilates Desteği Sunuyoruz? */}
+            <div className="rounded-[2.5rem] border border-white/[0.08] bg-[#0c0c0e] p-8 shadow-2xl transition hover:border-[#c9a66b]/40">
+              <div className="space-y-4">
+                <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a66b]">Uzmanlık Alanları</span>
+                <h3 className="font-serif text-2xl font-light text-[#f5f3f0]">Hangi Durumlarda Pilates Desteği Sunuyoruz?</h3>
+                <div className="h-[1px] w-12 bg-[#c9a66b]/40" />
+                <p className="text-xs leading-relaxed text-[#e8e4dc]/60">
+                  Pilates, doğru planlandığında birçok kas ve iskelet sistemi probleminde güvenli bir egzersiz yöntemi olabilir. Stüdyomuzda, doktorunun egzersiz yapmasına onay verdiği bireyler için kişiye özel programlar hazırlıyoruz.
                 </p>
-                <h3 className="mt-4 font-serif text-3xl font-light leading-tight text-[#f5f3f0]">
-                  {item.name}
-                </h3>
-                <p className="mt-5 text-sm leading-[1.8] text-[#e8e4dc]/60">
-                  {item.description}
-                </p>
-
-                <div className="mt-8 flex items-baseline gap-2 text-[#f5f3f0]">
-                  <span className="font-serif text-5xl font-light text-[#c9a66b]">{new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(Number(item.price))}</span>
-                  <span className="text-sm font-light opacity-60">TL</span>
-                </div>
-                <p className="text-xs font-light text-[#e8e4dc]/40">
-                  {item.durationDays} gün geçerli — {item.sessionsCount} ders
-                </p>
-
-                <ul className="mt-7 space-y-3 text-[#e8e4dc]/80">
-                  {item.includes.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9a66b]" />
-                      <span>{feature}</span>
+                <ul className="space-y-2.5 pt-2 text-xs text-[#e8e4dc]/80">
+                  {[
+                    "Skolyoz",
+                    "Bel fıtığı",
+                    "Boyun fıtığı",
+                    "Fibromiyalji",
+                    "Duruş bozuklukları",
+                    "Masa başı çalışmaya bağlı kas ve eklem problemleri",
+                    "Hamilelik dönemi Pilatesi",
+                    "Doğum sonrası Pilates",
+                    "Esneklik ve hareket kabiliyetinin geliştirilmesi",
+                    "Core (merkez bölge) kuvvetlendirme",
+                    "Sağlıklı yaş alma (Longevity) odaklı egzersiz programları",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9a66b]" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
 
-                <a
-                  href="#iletisim"
-                  className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-6 py-3.5 text-sm font-medium tracking-wide transition ${
-                    item.isPopular
-                      ? "border border-[#c9a66b]/50 bg-[#c9a66b] text-[#000000] hover:bg-[#d4af37]"
-                      : "border border-white/10 bg-white/5 text-[#f5f3f0] hover:border-[#c9a66b]/40 hover:bg-white/10"
-                  }`}
-                >
-                  Bu Programı Seç
-                </a>
-              </article>
-            ))}
+            {/* Card 2: Neden Biz? */}
+            <div className="rounded-[2.5rem] border border-[#c9a66b]/30 bg-gradient-to-b from-[#141419] to-[#0c0c0e] p-8 shadow-2xl transition hover:border-[#c9a66b]">
+              <div className="space-y-4">
+                <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a66b]">Ayrıcalıklarımız</span>
+                <h3 className="font-serif text-2xl font-light text-[#f5f3f0]">Neden Biz?</h3>
+                <div className="h-[1px] w-12 bg-[#c9a66b]/40" />
+                <p className="text-xs leading-relaxed text-[#e8e4dc]/70">
+                  Stüdyomuzda amacımız yalnızca egzersiz yaptırmak değildir. Hareketi doğru öğretmek, ağrısız ve kaliteli bir yaşamı desteklemek en önemli önceliğimizdir.
+                </p>
+                <p className="text-xs font-medium text-[#c9a66b]">
+                  Fizyoterapistlerimiz ve uzman antrenörlerimiz birlikte çalışarak:
+                </p>
+                <ul className="space-y-3 pt-1 text-xs text-[#e8e4dc]/85">
+                  {[
+                    "Güvenli egzersiz planlaması yapar.",
+                    "Hareket kalitesini artırmayı hedefler.",
+                    "Omurga sağlığını destekleyen çalışmalar uygular.",
+                    "Kuvvet, denge ve esnekliği birlikte geliştirir.",
+                    "Düzenli takip ve program güncellemeleriyle gelişiminizi destekler.",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9a66b]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Card 3: Pilatesin Kazandırdıkları */}
+            <div className="rounded-[2.5rem] border border-white/[0.08] bg-[#0c0c0e] p-8 shadow-2xl transition hover:border-[#c9a66b]/40 md:col-span-2 lg:col-span-1">
+              <div className="space-y-4">
+                <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a66b]">Kazanımlar</span>
+                <h3 className="font-serif text-2xl font-light text-[#f5f3f0]">Pilatesin Kazandırdıkları</h3>
+                <div className="h-[1px] w-12 bg-[#c9a66b]/40" />
+                <p className="text-xs leading-relaxed text-[#e8e4dc]/60">
+                  Düzenli ve doğru uygulanan Pilates bedeninizde kalıcı dönüşümler sağlar:
+                </p>
+                <ul className="space-y-3 pt-2 text-xs text-[#e8e4dc]/80">
+                  {[
+                    "Daha güçlü bir duruş,",
+                    "Daha dengeli ve esnek bir vücut,",
+                    "Artan kas dayanıklılığı,",
+                    "Günlük yaşamda daha rahat hareket etme,",
+                    "Vücut farkındalığının gelişmesi,",
+                    "Sağlıklı yaş alma sürecinin desteklenmesine katkı sağlar.",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c9a66b]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 rounded-3xl border border-white/[0.06] bg-[#0c0c0e]/80 p-8 text-center max-w-4xl mx-auto space-y-4">
+            <h4 className="font-serif text-2xl font-light text-[#f5f3f0]">Sizi Stüdyomuza Bekliyoruz</h4>
+            <p className="text-sm leading-relaxed text-[#e8e4dc]/70">
+              İster ilk kez Pilatese başlayacak olun, ister omurga sağlığınızı desteklemek ya da yaşam kalitenizi artırmak isteyin; fizyoterapist destekli ve bilimsel temellere dayanan yaklaşımımızla size en uygun programı birlikte planlayabiliriz.
+            </p>
+            <p className="text-base font-medium italic text-[#c9a66b]">
+              Sağlıklı hareket, güçlü bir beden ve sürdürülebilir bir yaşam için sizi stüdyomuza bekliyoruz.
+            </p>
           </div>
         </div>
       </section>
+
+      {/* Hakkımızda Section */}
+      <section id="hakkimizda" className="relative overflow-hidden bg-[#121822]">
+        <div className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
+          <div className="mx-auto max-w-3xl text-center space-y-4">
+            <SectionLabel label="Hakkımızda" />
+            <h2 className="font-serif text-4xl font-light tracking-tight text-[#f5f3f0] lg:text-5xl">
+              Fizyoterapist ve Uzman Antrenör Eşliğinde <br />
+              <span className="italic text-[#c9a66b]">Kişiye Özel Pilates</span>
+            </h2>
+            <GoldLine />
+          </div>
+
+          <div className="mt-16 grid gap-8 md:grid-cols-2">
+            <div className="space-y-6 rounded-[2rem] border border-white/[0.08] bg-[#0a0f14]/80 p-8 shadow-xl">
+              <h3 className="font-serif text-2xl font-light text-[#c9a66b]">Bütüncül ve Kişiye Özel Yaklaşım</h3>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                Stüdyomuzda her bireyin ihtiyaçlarının farklı olduğuna inanıyor, bu nedenle tüm derslerimizi kişiye özel değerlendirme ve planlama ile yürütüyoruz. Fizyoterapist ekibimiz ve uzman antrenörlerimiz birlikte çalışarak üyelerimizin hedeflerine güvenli ve bilinçli bir şekilde ulaşmalarını destekliyor.
+              </p>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                İlk değerlendirme sürecinde duruş analizi, omurga hizalanması, eklem hareket açıklığı, kas kuvveti, esneklik, denge ve hareket kalitesi detaylı olarak incelenir. Elde edilen veriler doğrultusunda tamamen size özel bir egzersiz programı oluşturulur.
+              </p>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                Pilates yaklaşımımız; doğru nefes, doğru hizalanma ve kontrollü hareket prensipleri üzerine kuruludur. Amacımız yalnızca daha güçlü bir vücut oluşturmak değil, aynı zamanda günlük yaşam kalitesini artırmak, hareket konforunu geliştirmek ve sürdürülebilir bir yaşam alışkanlığı kazandırmaktır.
+              </p>
+            </div>
+
+            <div className="space-y-6 rounded-[2rem] border border-white/[0.08] bg-[#0a0f14]/80 p-8 shadow-xl">
+              <h3 className="font-serif text-2xl font-light text-[#c9a66b]">Klinik & Dönüşüm Programlarımız</h3>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                Programlarımız; duruş bozuklukları, masa başı çalışma kaynaklı kas-iskelet sistemi problemleri ve doktor onayıyla egzersiz yapmasında sakınca bulunmayan skolyoz, bel ve boyun fıtığı, fibromiyalji gibi durumlarda kişinin ihtiyaçlarına uygun şekilde planlanır. Egzersizler, mevcut duruma göre uyarlanır ve süreç boyunca düzenli olarak takip edilir.
+              </p>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                Bunun yanı sıra hamilelik ve doğum sonrası dönem, sporcu performansının geliştirilmesi, hareket kabiliyetinin artırılması, denge ve koordinasyon çalışmaları ile sağlıklı yaş alma (healthy aging/longevity) hedefleyen bireyler için de özel programlar sunuyoruz.
+              </p>
+              <p className="text-sm leading-[1.85] text-[#e8e4dc]/75">
+                Bizim için Pilates, yalnızca bir egzersiz sistemi değil; bilimsel temellere dayanan, güvenli hareketi öğreten ve yaşam boyu sağlığı destekleyen bütüncül bir yaklaşımdır.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="font-serif text-2xl font-light text-[#f5f3f0]">
+              Sağlıklı hareket, güçlü bir beden ve daha kaliteli bir yaşam için sizi stüdyomuza bekliyoruz.
+            </p>
+          </div>
+        </div>
+      </section>
+
+
 
       {/* Testimonial / Atmosphere */}
       <section className="relative overflow-hidden bg-[#0a0f14]">
@@ -459,7 +514,7 @@ export default async function HomePage() {
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-[#121822]/40 px-6 py-5">
                   <p className="text-xs uppercase tracking-[0.2em] text-[#bfa38e]">İletişim & Telefon</p>
-                  <p className="mt-2 text-base font-light text-[#f5f3f0]">info@aslicelikpilates.com</p>
+                  <p className="mt-2 text-base font-light text-[#f5f3f0]">asliclk80@hotmail.com</p>
                   <p className="text-sm font-medium text-[#c9a66b]">0543 219 42 20</p>
                 </div>
               </div>

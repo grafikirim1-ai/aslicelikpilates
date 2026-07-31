@@ -71,6 +71,9 @@ export const sessions = pgTable(
       .notNull()
       .references(() => instructors.id, { onDelete: "restrict" }),
     isFeatured: boolean("is_featured").notNull().default(false),
+    isPrivate: boolean("is_private").notNull().default(false),
+    memberId: integer("member_id"),
+    memberName: varchar("member_name", { length: 120 }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -137,6 +140,8 @@ export const members = pgTable("acp_members", {
   paidAmount: numeric("paid_amount", { precision: 10, scale: 2 }).notNull().default("8000.00"),
   paymentStatus: varchar("payment_status", { length: 40 }).notNull().default("paid"),
   paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("Kredi Kartı"),
+  instructorId: integer("instructor_id").references(() => instructors.id, { onDelete: "set null" }),
+  status: varchar("status", { length: 40 }).notNull().default("active"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

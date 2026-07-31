@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { inquiries, instructors, notifications, packages, sessions, gallery, members } from "@/db/schema";
@@ -31,7 +31,7 @@ export async function getWebsiteData() {
     })
       .from(sessions)
       .innerJoin(instructors, eq(sessions.instructorId, instructors.id))
-      .where(eq(sessions.isActive, true))
+      .where(and(eq(sessions.isActive, true), eq(sessions.isPrivate, false)))
       .orderBy(asc(sessions.weekday), asc(sessions.startTime)),
     db.select({ count: sql<number>`count(*)` }).from(inquiries),
     db.select().from(gallery).where(eq(gallery.isActive, true)).orderBy(asc(gallery.order), desc(gallery.createdAt)),
