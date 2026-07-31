@@ -10,9 +10,30 @@ async function countRows(table: AnyPgTable) {
 }
 
 export async function ensureSeedData() {
-  // Ensure DB columns exist for instructorId and status in acp_members
+  // Ensure DB columns & tables exist for acp_events, acp_settings, instructorId and status
   try {
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS acp_events (
+        id serial PRIMARY KEY,
+        title varchar(200) NOT NULL,
+        description text NOT NULL,
+        event_date varchar(50) NOT NULL,
+        start_time varchar(20) NOT NULL,
+        end_time varchar(20) NOT NULL,
+        location varchar(255) NOT NULL DEFAULT 'Aslı Çelik Pilates Studio',
+        recipient_type varchar(20) NOT NULL DEFAULT 'all',
+        recipient_count integer NOT NULL DEFAULT 0,
+        status varchar(40) NOT NULL DEFAULT 'sent',
+        created_at timestamp with time zone NOT NULL DEFAULT now()
+      );
+
+      CREATE TABLE IF NOT EXISTS acp_settings (
+        id serial PRIMARY KEY,
+        sender_email varchar(160) NOT NULL DEFAULT 'asliclk80@hotmail.com',
+        is_email_configured boolean NOT NULL DEFAULT false,
+        updated_at timestamp with time zone NOT NULL DEFAULT now()
+      );
+
       ALTER TABLE acp_members ADD COLUMN IF NOT EXISTS instructor_id integer REFERENCES acp_instructors(id) ON DELETE SET NULL;
       ALTER TABLE acp_members ADD COLUMN IF NOT EXISTS status varchar(40) NOT NULL DEFAULT 'active';
       ALTER TABLE acp_sessions ADD COLUMN IF NOT EXISTS is_private boolean DEFAULT false;

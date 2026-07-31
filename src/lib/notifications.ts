@@ -1,8 +1,14 @@
 import { db } from "@/db";
-import { notifications } from "@/db/schema";
+import { notifications, settings } from "@/db/schema";
 import nodemailer from "nodemailer";
 
-function studioEmail() {
+async function studioEmail() {
+  try {
+    const list = await db.select().from(settings).limit(1);
+    if (list[0]?.senderEmail) {
+      return list[0].senderEmail;
+    }
+  } catch (err) {}
   return process.env.STUDIO_NOTIFICATION_EMAIL ?? "asliclk80@hotmail.com";
 }
 
@@ -21,7 +27,7 @@ export async function queueLeadNotifications(input: {
 }) {
   const leadReply = `Merhaba ${input.fullName}, Aslı Çelik Pilates ailesine hoş geldiniz. ${input.preferredPackage ? `${input.preferredPackage} için` : "Size uygun paket için"} en kısa sürede dönüş yapacağız.`;
 
-  const targetStudioEmail = studioEmail();
+  const targetStudioEmail = await studioEmail();
 
   // Try to send real email to studio if SMTP is configured
   const smtpHost = process.env.SMTP_HOST;

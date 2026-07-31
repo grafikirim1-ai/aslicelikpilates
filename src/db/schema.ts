@@ -128,6 +128,27 @@ export const adminUsers = pgTable("acp_admin_users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const settings = pgTable("acp_settings", {
+  id: serial("id").primaryKey(),
+  senderEmail: varchar("sender_email", { length: 160 }).notNull().default("asliclk80@hotmail.com"),
+  isEmailConfigured: boolean("is_email_configured").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const events = pgTable("acp_events", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  eventDate: varchar("event_date", { length: 50 }).notNull(),
+  startTime: varchar("start_time", { length: 20 }).notNull(),
+  endTime: varchar("end_time", { length: 20 }).notNull(),
+  location: varchar("location", { length: 255 }).notNull().default("Aslı Çelik Pilates Studio"),
+  recipientType: varchar("recipient_type", { length: 20 }).notNull().default("all"), // 'all' | 'selected'
+  recipientCount: integer("recipient_count").notNull().default(0),
+  status: varchar("status", { length: 40 }).notNull().default("sent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const members = pgTable("acp_members", {
   id: serial("id").primaryKey(),
   fullName: varchar("full_name", { length: 120 }).notNull(),

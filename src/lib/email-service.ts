@@ -657,3 +657,108 @@ export async function queueInstructorAssignmentNotification(params: {
   return { notif, htmlContent };
 }
 
+// 7. EVENT & SPECIAL BROADCAST NOTIFICATION EMAIL (Etkinlik Daveti ve Duyuru)
+export async function queueEventNotification(params: {
+  memberEmail: string;
+  memberName: string;
+  eventTitle: string;
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  description: string;
+}) {
+  if (!params.memberEmail) return null;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>${params.eventTitle} | Aslı Çelik Pilates Etkinlik Daveti</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #050507; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #f5f3f0;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #050507; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; width: 100%; background-color: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; overflow: hidden;">
+          <tr>
+            <td align="center" style="padding: 35px 30px 20px 30px; background-color: #000000; border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <h1 style="margin: 0; font-family: Georgia, serif; font-size: 24px; color: #c9a66b; font-weight: 300; letter-spacing: 2px;">ASLI ÇELİK PILATES</h1>
+              <p style="margin: 5px 0 0 0; font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: #bfa38e;">Special Event & Workshop</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 35px 30px;">
+              <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">✨ Özel Etkinlik Davetiyesi</p>
+              <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
+                Sayın <span style="color: #c9a66b;">${params.memberName}</span>,
+              </h2>
+              <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
+                Stüdyomuz bünyesinde düzenlenen özel etkinliğimize davetlisiniz! Etkinlik detayları aşağıda bilgilerinize sunulmuştur:
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(201, 166, 107, 0.08); border: 1px solid rgba(201, 166, 107, 0.3); border-radius: 16px; margin-bottom: 25px;">
+                <tr>
+                  <td style="padding: 22px;">
+                    <p style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Etkinlik Başlığı</p>
+                    <h3 style="margin: 0 0 15px 0; font-family: Georgia, serif; font-size: 22px; color: #ffffff;">${params.eventTitle}</h3>
+                    
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>🗓 Tarih:</strong> ${params.eventDate}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>⏰ Saat:</strong> ${params.startTime} — ${params.endTime}</p>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #f5f3f0;"><strong>📍 Konum:</strong> ${params.location}</p>
+                    
+                    <div style="border-top: 1px solid rgba(255,255,255,0.08); pt-12; margin-top: 12px; padding-top: 12px;">
+                      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: rgba(232, 228, 220, 0.85);">${params.description}</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0; font-size: 13px; color: rgba(232, 228, 220, 0.6); text-align: center; line-height: 1.6;">
+                Katılım teyidi veya detaylı bilgi için stüdyomuz veya eğitmeninizle iletişime geçebilirsiniz.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding: 20px 30px; background-color: #000000; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: rgba(232, 228, 220, 0.4);">
+              © Aslı Çelik Pilates Studio — Özel Etkinlik Bilgilendirme Sistemi
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+
+  const transporter = getTransporter();
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"Aslı Çelik Pilates" <${process.env.SMTP_USER}>`,
+        to: params.memberEmail,
+        subject: `✨ Etkinlik Davetiyesi: ${params.eventTitle} (${params.eventDate})`,
+        html: htmlContent,
+      });
+    } catch (err: any) {
+      console.error("SMTP Event Notification Email Error:", err);
+    }
+  }
+
+  const [notif] = await db
+    .insert(notifications)
+    .values({
+      channel: "email",
+      recipient: params.memberEmail,
+      title: `Etkinlik Daveti: ${params.eventTitle}`,
+      message: `Sayın ${params.memberName}, ${params.eventDate} tarihindeki ${params.eventTitle} etkinliğimize davetlisiniz.`,
+      eventType: "event_broadcast",
+      status: "sent",
+    })
+    .returning();
+
+  return { notif, htmlContent };
+}
+
