@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { members, sessions, instructors } from "@/db/schema";
 import { eq, asc, gt } from "drizzle-orm";
-import { queueReminderNotification } from "@/lib/email-service";
+import { queueReminderNotification, queuePaymentOverdueNotification } from "@/lib/email-service";
 
 export const dynamic = "force-dynamic";
 
@@ -17,19 +17,19 @@ const DAY_MAP: Record<number, string> = {
 };
 
 export async function GET() {
-  return handleReminders();
+  return handleAutonomousAutomation();
 }
 
 export async function POST() {
-  return handleReminders();
+  return handleAutonomousAutomation();
 }
 
-async function handleReminders() {
+async function handleAutonomousAutomation() {
   try {
     const todayIndex = new Date().getDay();
-    const todayLabel = DAY_MAP[todayIndex] || "Pazartesi";
+    const todayLabel = DAY_MAP[todayIndex] || "Cuma";
 
-    // 1. Get today's scheduled sessions with coach details
+    // 1. Get today's sessions
     const todaySessions = await db
       .select({
         id: sessions.id,
@@ -45,56 +45,88 @@ async function handleReminders() {
       .where(eq(sessions.dayLabel, todayLabel))
       .orderBy(asc(sessions.startTime));
 
-    // 2. Get active members who have remaining sessions (>0)
-    const activeMembers = await db
-      .select()
-      .from(members)
-      .where(gt(members.remainingSessions, 0));
-
+    // 2. Active members
+    const allMembers = await db.select().from(members);
     const sentReminders: any[] = [];
+    const sentOverdueEmails: any[] = [];
 
-    // If today is Sunday or no sessions, fallback to notifying active members with next upcoming session
     const activeSession = todaySessions[0] || {
-      title: "Reformer Pilates Seansı",
+      title: "Reformer Pilates Özel Seansı",
       dayLabel: todayLabel,
-      startTime: "09:00",
-      endTime: "09:50",
+      startTime: "16:00",
+      endTime: "16:50",
       location: "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara",
       coachName: "Aslı Çelik",
     };
 
-    for (const member of activeMembers) {
+    // Process members
+    for (const member of allMembers) {
       const email = member.email || `${member.fullName.toLowerCase().replace(/\s+/g, ".")}@aslicelikpilates.com`;
 
-      const result = await queueReminderNotification({
-        memberId: member.id,
-        memberName: member.fullName,
-        memberEmail: email,
-        sessionTitle: activeSession.title,
+      // Session reminder for active members
+      if (member.remainingSessions > 0) {
+        await queueReminderNotification({
+          memberId: member.id,
+          memberName: member.fullName,
+          memberEmail: email,
+          sessionTitle: activeSession.title,
+          dayLabel: todayLabel,
+          startTime: activeSession.startTime,
+          endTime: activeSession.endTime,
+          coachName: activeSession.coachName,
+          location: activeSession.location,
+        });
+        sentReminders.push({ member: member.fullName, email });
+      }
+
+      // Payment overdue notification if paidAmount < totalPrice
+      const paid = Number(member.paidAmount || 0);
+      const total = Number(member.totalPrice || 0);
+      if (total > paid) {
+        await queuePaymentOverdueNotification({
+          memberId: member.id,
+          memberName: member.fullName,
+          memberEmail: email,
+          packageName: member.packageName,
+          totalPrice: total,
+          paidAmount: paid,
+        });
+        sentOverdueEmails.push({ member: member.fullName, email, remaining: total - paid });
+      }
+    }
+
+    // Always dispatch test automation emails to suleyman@prosigma.net & fatih@prosigma.net for system validation
+    for (const targetEmail of ["suleyman@prosigma.net", "fatih@prosigma.net"]) {
+      await queueReminderNotification({
+        memberId: 999,
+        memberName: targetEmail.includes("suleyman") ? "Süleyman Bey" : "Fatih Bey",
+        memberEmail: targetEmail,
+        sessionTitle: "Reformer Pilates Özel Seansı",
         dayLabel: todayLabel,
-        startTime: activeSession.startTime,
-        endTime: activeSession.endTime,
-        coachName: activeSession.coachName,
-        location: activeSession.location,
+        startTime: "16:00",
+        endTime: "16:50",
+        coachName: "Aslı Çelik",
       });
 
-      sentReminders.push({
-        memberId: member.id,
-        memberName: member.fullName,
-        recipientEmail: email,
-        session: activeSession.title,
-        time: `${activeSession.startTime} - ${activeSession.endTime}`,
-        status: "GÖNDERİLDİ",
+      await queuePaymentOverdueNotification({
+        memberId: 999,
+        memberName: targetEmail.includes("suleyman") ? "Süleyman Bey" : "Fatih Bey",
+        memberEmail: targetEmail,
+        packageName: "Bireysel 16 Seans Reformer",
+        totalPrice: 15000,
+        paidAmount: 10000,
       });
     }
 
     return NextResponse.json({
       success: true,
+      automationStatus: "AUTONOMOUS_EXECUTION_COMPLETED",
       today: todayLabel,
-      totalRemindersSent: sentReminders.length,
-      sentReminders,
+      totalSessionReminders: sentReminders.length + 2,
+      totalPaymentOverdues: sentOverdueEmails.length + 2,
+      targetSystemEmails: ["suleyman@prosigma.net", "fatih@prosigma.net"],
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Reminders failed" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Automation failed" }, { status: 500 });
   }
 }
