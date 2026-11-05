@@ -1,5 +1,8 @@
 export const services = {
   "baglica-reformer-pilates": {
+    updatedAt: "2026-11-05",
+    image: "/studio-reformers.jpg",
+    imageAlt: "Aslı Çelik Pilates stüdyosunda reformer ekipmanları",
     title: "Bağlıca Reformer Pilates",
     description: "Etimesgut Bağlıca’da kişiye özel reformer pilates dersleri. Aslı Çelik Pilates stüdyosu, başlangıç değerlendirmesi ve seans planlaması hakkında bilgi alın.",
     intro: "Aslı Çelik Pilates, Ankara Etimesgut’un Bağlıca mahallesinde reformer pilates dersleri sunar. İlk kez başlayacak kişiler ve düzenli bir hareket alışkanlığı oluşturmak isteyenler için program, kişinin deneyimi ve hedefleri değerlendirilerek planlanır.",
@@ -14,6 +17,9 @@ export const services = {
     ],
   },
   "fizyoterapist-destekli-pilates": {
+    updatedAt: "2026-11-05",
+    image: "/asli-celik-reformer.jpg",
+    imageAlt: "Aslı Çelik Pilates stüdyosunda reformer çalışması",
     title: "Ankara Fizyoterapist Destekli Pilates",
     description: "Bağlıca’da fizyoterapist ve uzman eğitmen iş birliğiyle kişiye özel pilates planlaması. Değerlendirme süreci ve stüdyo yaklaşımımızı keşfedin.",
     intro: "Bağlıca stüdyomuzda fizyoterapistler ve uzman eğitmenler birlikte çalışır. Ders planı oluşturulurken hareket geçmişi, kişisel hedefler ve değerlendirmede belirlenen ihtiyaçlar dikkate alınır.",
@@ -28,6 +34,9 @@ export const services = {
     ],
   },
   "hamile-pilatesi-ankara": {
+    updatedAt: "2026-11-05",
+    image: "/asli-celik-studio.jpg",
+    imageAlt: "Bağlıca’daki Aslı Çelik Pilates stüdyosu",
     title: "Ankara Bağlıca Hamile Pilatesi",
     description: "Aslı Çelik Pilates’te hamilelik ve doğum sonrası dönem için kişiye özel pilates planlaması. Bağlıca stüdyosundan ön görüşme ve uygunluk bilgisi alın.",
     intro: "Aslı Çelik Pilates, hamilelik ve doğum sonrası dönem için kişisel değerlendirmeye dayanan ders planlaması sunar. Bağlıca stüdyomuzdaki program seçenekleri hakkında ön görüşme yapabilirsiniz.",

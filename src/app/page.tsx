@@ -19,6 +19,7 @@ const studioSchema = {
   url: "https://www.aslicelikpilates.com/",
   image: "https://www.aslicelikpilates.com/studio-hero.jpg",
   telephone: "+905432194220",
+  areaServed: { "@type": "Place", name: "Bağlıca, Etimesgut, Ankara" },
   hasMap: "https://maps.app.goo.gl/xR6Jhn4L9X2uZpxZ6",
   sameAs: ["https://maps.app.goo.gl/xR6Jhn4L9X2uZpxZ6"],
   geo: { "@type": "GeoCoordinates", latitude: 39.8984137, longitude: 32.647539 },
