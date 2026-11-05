@@ -11,7 +11,7 @@ function asNumber(value: number | string | null | undefined) {
 export async function getWebsiteData() {
   await ensureSeedData();
 
-  const [coachRows, packageRows, sessionRows, totalLeadRows, galleryRows] = await Promise.all([
+  const [coachRows, packageRows, sessionRows, galleryRows] = await Promise.all([
     db.select().from(instructors).where(eq(instructors.isActive, true)).orderBy(desc(instructors.experienceYears)),
     db.select().from(packages).where(eq(packages.isActive, true)).orderBy(desc(packages.isPopular), asc(packages.price)),
     db.select({
@@ -33,14 +33,12 @@ export async function getWebsiteData() {
       .innerJoin(instructors, eq(sessions.instructorId, instructors.id))
       .where(and(eq(sessions.isActive, true), eq(sessions.isPrivate, false)))
       .orderBy(asc(sessions.weekday), asc(sessions.startTime)),
-    db.select({ count: sql<number>`count(*)` }).from(inquiries),
     db.select().from(gallery).where(eq(gallery.isActive, true)).orderBy(asc(gallery.order), desc(gallery.createdAt)),
   ]);
 
-  const totalLeads = asNumber(totalLeadRows[0]?.count);
 
   return {
-    coaches: coachRows,
+    coaches: coachRows.map(({ id, fullName, role, specialties, bio, experienceYears }) => ({ id, fullName, role, specialties, bio, experienceYears })),
     packages: packageRows.map((item) => ({
       ...item,
       price: asNumber(item.price),
@@ -51,7 +49,6 @@ export async function getWebsiteData() {
       weeklySessions: sessionRows.length,
       activeCoaches: coachRows.length,
       packages: packageRows.length,
-      totalLeads,
     },
   };
 }

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { settings } from "@/db/schema";
@@ -5,7 +6,9 @@ import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const list = await db.select().from(settings).limit(1);
     if (list.length === 0) {
@@ -20,11 +23,13 @@ export async function GET() {
     }
     return NextResponse.json({ ok: true, settings: list[0] });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Ayarlar getirilemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { senderEmail } = body;
@@ -62,6 +67,6 @@ export async function POST(req: Request) {
       message: `Yönetici bildirim e-posta adresi '${senderEmail}' olarak güncellendi.`,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Ayarlar kaydedilemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }

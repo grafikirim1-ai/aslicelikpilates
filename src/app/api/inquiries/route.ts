@@ -1,53 +1,18 @@
-import { NextRequest } from "next/server";
-
 import { db } from "@/db";
 import { inquiries } from "@/db/schema";
 import { queueLeadNotifications } from "@/lib/notifications";
-import { ensureSeedData } from "@/lib/seed";
-
+import { trustedOrigin } from "@/lib/auth";
+import { allowAttempt } from "@/lib/rate-limit";
+import { contactFields, field, publicBody } from "@/lib/public-input";
 export const dynamic = "force-dynamic";
-
-export async function POST(request: NextRequest) {
-  await ensureSeedData();
-
-  const body = await request.json();
-
-  const payload = {
-    fullName: String(body.fullName ?? "").trim(),
-    phone: String(body.phone ?? "").trim(),
-    email: String(body.email ?? "").trim(),
-    goal: String(body.goal ?? "").trim(),
-    preferredPackage: body.preferredPackage ? String(body.preferredPackage).trim() : null,
-    wantsWhatsapp: body.wantsWhatsapp !== false,
-    message: String(body.message ?? "").trim(),
-    source: "website",
-    status: "new",
-  };
-
-  if (!payload.fullName || !payload.phone || !payload.email || !payload.goal || !payload.message) {
-    return Response.json(
-      {
-        ok: false,
-        error: "Lütfen ad soyad, telefon, e-posta, hedef ve mesaj alanlarını doldurun.",
-      },
-      { status: 400 },
-    );
-  }
-
-  const [created] = await db.insert(inquiries).values(payload).returning({ id: inquiries.id });
-
-  await queueLeadNotifications({
-    inquiryId: created.id,
-    fullName: payload.fullName,
-    phone: payload.phone,
-    email: payload.email,
-    goal: payload.goal,
-    preferredPackage: payload.preferredPackage,
-    wantsWhatsapp: payload.wantsWhatsapp,
-  });
-
-  return Response.json({
-    ok: true,
-    message: "Talebiniz başarıyla alındı. En kısa sürede size dönüş yapacağız.",
-  });
+export async function POST(request: Request) {
+  if (!trustedOrigin(request)) return Response.json({ error: "İstek kaynağı doğrulanamadı." }, { status: 403 });
+  try {
+    if (!(await allowAttempt(request, "inquiry", 5, 3600))) return Response.json({ error: "Çok fazla talep. Daha sonra tekrar deneyin." }, { status: 429 });
+    const body = await publicBody(request);
+    const payload = { ...contactFields(body), goal: field(body, "goal", 160), preferredPackage: field(body, "preferredPackage", 120, false) || null, message: field(body, "message", 2000), wantsWhatsapp: body.wantsWhatsapp === true, source: "website", status: "new" };
+    const [created] = await db.insert(inquiries).values(payload).returning({ id: inquiries.id, createdAt: inquiries.createdAt });
+    try { await queueLeadNotifications({ inquiryId: created.id, createdAt: created.createdAt.toISOString(), ...payload }); } catch { console.error("Lead notification failed"); }
+    return Response.json({ ok: true, message: "Talebiniz başarıyla alındı. En kısa sürede size dönüş yapacağız." });
+  } catch { return Response.json({ error: "Talep alınamadı. Bilgilerinizi kontrol edip tekrar deneyin." }, { status: 400 }); }
 }

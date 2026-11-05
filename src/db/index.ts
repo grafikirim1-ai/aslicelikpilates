@@ -9,6 +9,12 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 
+// pg parses sslmode from the URL after other options. Remove it so it cannot
+// override certificate verification for required TLS connections.
+const connectionUrl = new URL(databaseUrl);
+const requiresTls = ["require", "verify-ca", "verify-full"].includes(connectionUrl.searchParams.get("sslmode") ?? "") || connectionUrl.hostname.endsWith(".neon.tech");
+if (requiresTls) connectionUrl.searchParams.delete("sslmode");
+
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
 };
@@ -16,8 +22,8 @@ const globalForDb = globalThis as typeof globalThis & {
 export const pool =
   globalForDb.__arenaNextJsPostgresqlPool ??
   new Pool({
-    connectionString: databaseUrl,
-    ssl: databaseUrl.includes("sslmode=require") || databaseUrl.includes("neon.tech") ? { rejectUnauthorized: false } : undefined,
+    connectionString: connectionUrl.toString(),
+    ssl: requiresTls ? { rejectUnauthorized: true } : undefined,
   });
 
 if (process.env.NODE_ENV !== "production") {

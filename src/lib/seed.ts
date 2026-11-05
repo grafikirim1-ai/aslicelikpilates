@@ -10,6 +10,8 @@ async function countRows(table: AnyPgTable) {
 }
 
 export async function ensureSeedData() {
+  // Demo data and schema changes must never run from production visitor requests.
+  if (process.env.NODE_ENV === "production") return;
   // Ensure DB columns & tables exist for acp_events, acp_settings, instructorId and status
   try {
     await db.execute(sql`

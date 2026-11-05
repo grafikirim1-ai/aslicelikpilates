@@ -22,7 +22,7 @@ export default function MemberRegistrationPage() {
     setSuccess(false);
 
     try {
-      const res = await fetch("/api/admin/members", {
+      const res = await fetch("/api/members/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -30,13 +30,6 @@ export default function MemberRegistrationPage() {
           phone,
           email,
           packageName,
-          status: "pending",
-          totalSessions: packageName.includes("16") ? 16 : 8,
-          remainingSessions: packageName.includes("16") ? 16 : 8,
-          totalPrice: packageName.includes("16") ? "15000" : "8000",
-          paidAmount: "0",
-          paymentStatus: "pending",
-          paymentMethod: "Henüz Ödenmedi",
           notes: notes ? `Ziyaretçi Ön Kaydı: ${notes}` : "Online üye başvuru kaydı",
         }),
       });

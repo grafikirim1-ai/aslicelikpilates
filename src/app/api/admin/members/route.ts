@@ -1,23 +1,28 @@
+import { requireAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { members, instructors } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import {
   queueWelcomeNotification,
   queueInstructorAssignmentNotification,
   queueMemberApprovalNotification,
 } from "@/lib/email-service";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const list = await db.select().from(members).orderBy(desc(members.createdAt));
     return NextResponse.json({ ok: true, members: list });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Hata oluştu" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const {
@@ -91,11 +96,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, member: inserted });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Eklenemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }
 
 export async function PATCH(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, action, paidAmount, remainingSessions, instructorId, status, notes } = body;
@@ -113,12 +120,11 @@ export async function PATCH(req: Request) {
 
     // Action 1: Decrement Session (-1)
     if (action === "use_session") {
-      const newRem = Math.max(0, existing.remainingSessions - 1);
-      updateData.remainingSessions = newRem;
+      updateData.remainingSessions = sql`greatest(0, ${members.remainingSessions} - 1)`;
     }
     // Action 2: Increment Session (+1)
     else if (action === "add_session") {
-      updateData.remainingSessions = existing.remainingSessions + 1;
+      updateData.remainingSessions = sql`${members.remainingSessions} + 1`;
     }
     // Action 3: Manual Session Count Update
     else if (remainingSessions !== undefined) {
@@ -191,11 +197,13 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ ok: true, member: updated });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Güncellenemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -207,6 +215,6 @@ export async function DELETE(req: Request) {
     await db.delete(members).where(eq(members.id, parseInt(id, 10)));
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Silinemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }

@@ -24,11 +24,14 @@ import {
 
 type AdminClientProps = {
   initialData: any;
+  authenticated: boolean;
+  initialInquiryId?: number | null;
+  initialTab?: "members" | "inquiries";
 };
 
-export function AdminDashboardClient({ initialData }: AdminClientProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+export function AdminDashboardClient({ initialData, authenticated, initialInquiryId, initialTab = "members" }: AdminClientProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(authenticated);
+  const isCheckingAuth = false;
 
   // Sidebar & Navigation Drawer State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -69,7 +72,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
   // Login form state
   const [loginUsername, setLoginUsername] = useState("admin");
-  const [loginPassword, setLoginPassword] = useState("admin");
+  const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -83,7 +86,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
   const [activeTab, setActiveTab] = useState<
     "members" | "inquiries" | "sessions" | "packages" | "instructors" | "events" | "gallery" | "security"
-  >("members");
+  >(initialTab);
 
   const [membersList, setMembersList] = useState(initialData.allMembers || []);
   const [inquiriesList, setInquiriesList] = useState(initialData.recentInquiries || []);
@@ -187,31 +190,20 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
   const [editingMember, setEditingMember] = useState<any>(null);
 
   useEffect(() => {
-    const sessionToken = localStorage.getItem("acp_admin_auth");
-    const storedRole = (localStorage.getItem("acp_user_role") as "admin" | "instructor") || "admin";
-    const storedInstructorId = localStorage.getItem("acp_instructor_id");
+    if (authenticated && initialInquiryId && activeTab === "inquiries") document.getElementById(`talep-${initialInquiryId}`)?.scrollIntoView({ block: "center" });
+  }, [authenticated, initialInquiryId, activeTab]);
 
-    if (sessionToken === "true") {
-      setIsLoggedIn(true);
-      setUserRole(storedRole);
-      if (storedInstructorId) {
-        setCurrentInstructorId(Number(storedInstructorId));
-      }
-    }
-    setIsCheckingAuth(false);
-    fetchSettings();
-  }, []);
-
-  async function fetchSettings() {
-    try {
-      const res = await fetch("/api/admin/settings");
-      const data = await res.json();
-      if (res.ok && data.ok && data.settings) {
+  useEffect(() => {
+    if (!authenticated) return;
+    let active = true;
+    fetch("/api/admin/settings").then((res) => res.ok ? res.json() : null).then((data) => {
+      if (active && data?.ok && data.settings) {
         setSenderEmail(data.settings.senderEmail || "asliclk80@hotmail.com");
         setIsEmailConfigured(Boolean(data.settings.isEmailConfigured));
       }
-    } catch (err) {}
-  }
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [authenticated]);
 
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
@@ -248,20 +240,6 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
     e.preventDefault();
     setLoginError("");
 
-    if (loginRole === "instructor") {
-      if (!selectedInstructorLoginId) {
-        setLoginError("Lütfen giriş yapmak istediğiniz eğitmeni seçin.");
-        return;
-      }
-      localStorage.setItem("acp_admin_auth", "true");
-      localStorage.setItem("acp_user_role", "instructor");
-      localStorage.setItem("acp_instructor_id", String(selectedInstructorLoginId));
-      setUserRole("instructor");
-      setCurrentInstructorId(selectedInstructorLoginId);
-      setIsLoggedIn(true);
-      return;
-    }
-
     setIsLoggingIn(true);
     try {
       const res = await fetch("/api/admin/login", {
@@ -271,12 +249,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        localStorage.setItem("acp_admin_auth", "true");
-        localStorage.setItem("acp_user_role", "admin");
-        localStorage.removeItem("acp_instructor_id");
-        setUserRole("admin");
-        setCurrentInstructorId(null);
-        setIsLoggedIn(true);
+        window.location.reload();
       } else {
         setLoginError(data.error || "Hatalı kullanıcı adı veya şifre!");
       }
@@ -287,13 +260,9 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem("acp_admin_auth");
-    localStorage.removeItem("acp_user_role");
-    localStorage.removeItem("acp_instructor_id");
-    setIsLoggedIn(false);
-    setUserRole("admin");
-    setCurrentInstructorId(null);
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.reload();
   }
 
   async function handleUpdateCredentials(e: React.FormEvent) {
@@ -765,42 +734,8 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             />
             <h2 className="font-serif text-2xl font-light text-[#f5f3f0]">Stüdyo Yönetim Girişi</h2>
             <p className="text-xs text-[#e8e4dc]/50">
-              Devam etmek için giriş türünüzü seçin.
+              Devam etmek için yönetici hesabınızla giriş yapın.
             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/40 p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setLoginRole("admin");
-                setLoginError("");
-              }}
-              className={`rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
-                loginRole === "admin"
-                  ? "bg-[#c9a66b] text-black shadow-md"
-                  : "text-[#e8e4dc]/60 hover:text-white"
-              }`}
-            >
-              Yönetici Girişi
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLoginRole("instructor");
-                setLoginError("");
-                if (!selectedInstructorLoginId && instructorsList.length > 0) {
-                  setSelectedInstructorLoginId(instructorsList[0].id);
-                }
-              }}
-              className={`rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
-                loginRole === "instructor"
-                  ? "bg-[#c9a66b] text-black shadow-md"
-                  : "text-[#e8e4dc]/60 hover:text-white"
-              }`}
-            >
-              Eğitmen Girişi
-            </button>
           </div>
 
           {loginError && (
@@ -877,13 +812,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
             </button>
           </form>
 
-          {loginRole === "admin" && (
-            <div className="text-center pt-2">
-              <p className="text-[11px] text-[#e8e4dc]/40">
-                Varsayılan Giriş: kullanıcı adı <code className="text-[#c9a66b]">admin</code> / şifre <code className="text-[#c9a66b]">admin</code>
-              </p>
-            </div>
-          )}
+
         </div>
       </div>
     );
@@ -1137,7 +1066,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
                       {m.notes && (
                         <p className="text-xs italic text-[#e8e4dc]/60 bg-white/5 p-2.5 rounded-xl border border-white/5">
-                          "{m.notes}"
+                          “{m.notes}”
                         </p>
                       )}
 
@@ -1192,10 +1121,11 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleSendReminders}
-                    disabled={isSendingReminders}
+                    disabled
+                    title="Üyeye özel takvim ve tekrar gönderim koruması hazırlanıyor."
                     className="rounded-full border border-[#c9a66b]/40 bg-[#c9a66b]/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-[#c9a66b] transition hover:bg-[#c9a66b]/20 disabled:opacity-50"
                   >
-                    {isSendingReminders ? "Gönderiliyor..." : "📨 Seans Hatırlatma Maillerini Gönder"}
+                    Hatırlatmalar geçici olarak kapalı
                   </button>
                   <button
                     onClick={() => setIsAddingMember(true)}
@@ -1637,7 +1567,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {inquiriesList.map((item: any) => (
-                <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-4">
+                <div key={item.id} id={`talep-${item.id}`} className={`rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-4 ${initialInquiryId === item.id ? "ring-2 ring-[#c9a66b]" : ""}`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-serif text-lg text-white">{item.fullName}</h3>
@@ -1659,7 +1589,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                   <div className="space-y-1.5 text-xs text-[#e8e4dc]/80 border-t border-b border-white/5 py-3">
                     <p><strong className="text-[#bfa38e]">Hedef:</strong> {item.goal}</p>
                     {item.preferredPackage && <p><strong className="text-[#bfa38e]">İlgilendiği Paket:</strong> {item.preferredPackage}</p>}
-                    <p><strong className="text-[#bfa38e]">Mesaj:</strong> "{item.message}"</p>
+                    <p><strong className="text-[#bfa38e]">Mesaj:</strong> “{item.message}”</p>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
@@ -2344,7 +2274,7 @@ export function AdminDashboardClient({ initialData }: AdminClientProps) {
                         </div>
 
                         <p className="text-xs text-white/50 leading-relaxed italic border-t border-white/5 pt-2">
-                          "{ev.description}"
+                          “{ev.description}”
                         </p>
                       </div>
                     ))}
