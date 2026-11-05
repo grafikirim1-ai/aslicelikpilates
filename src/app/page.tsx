@@ -1,3 +1,4 @@
+import StudioMap from "@/components/studio-map";
 import { services } from "@/lib/services";
 import Link from "next/link";
 import Image from "next/image";
@@ -611,7 +612,10 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <ContactForm packageOptions={data.packages.map((item) => ({ id: item.id, name: item.name }))} />
+            <div className="min-w-0 space-y-8">
+              <StudioMap />
+              <ContactForm packageOptions={data.packages.map((item) => ({ id: item.id, name: item.name }))} />
+            </div>
           </div>
         </div>
       </section>
