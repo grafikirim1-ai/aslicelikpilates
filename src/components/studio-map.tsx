@@ -12,7 +12,7 @@ export default function StudioMap() {
         title="Aslı Çelik Pilates — Bağlıca stüdyosunun tam konumu"
         src="https://maps.google.com/maps?q=39.8984137,32.647539&z=17&output=embed"
         className="block h-[360px] w-full border-0 lg:h-[480px]"
-        loading="lazy"
+        loading="eager"
         referrerPolicy="no-referrer-when-downgrade"
         allowFullScreen
       />
