@@ -75,3 +75,25 @@ test("public request parsing rejects arrays, oversized JSON and unsupported cont
 test("HTML injection is escaped before insertion into email markup", () => {
   assert.equal(input.escapeHtml('<a href="x">Tom & Sue</a>'), "&lt;a href=&quot;x&quot;&gt;Tom &amp; Sue&lt;/a&gt;");
 });
+
+const mailBundle = await build({ entryPoints: ["src/lib/lead-email.ts"], bundle: true, platform: "node", format: "esm", write: false });
+const leadMail = await import(`data:text/javascript;base64,${Buffer.from(mailBundle.outputFiles[0].text).toString("base64")}`);
+const lead = { inquiryId: 42, fullName: "Test Başvurusu", phone: "0543 219 42 20", email: "test@example.com", goal: "Esneklik", preferredPackage: "Birebir", wantsWhatsapp: true, message: "Hafta içi 18:00 sonrası uygunum.\nİkinci satır", createdAt: "2026-11-05T12:00:00.000Z" };
+test("lead email contains all submitted details and routes to the exact request", () => {
+  const mail = leadMail.buildLeadEmail(lead);
+  assert.equal(mail.to, "asliclk80@hotmail.com");
+  for (const value of [lead.fullName, lead.phone, lead.email, lead.goal, lead.preferredPackage, lead.message]) assert.ok(mail.text.includes(value));
+  assert.ok(mail.text.includes("inquiry=42"));
+  assert.ok(mail.html.includes("tab=inquiries&amp;inquiry=42"));
+  assert.ok(mail.html.includes("tel:+905432194220"));
+  assert.ok(mail.html.includes("https://wa.me/905432194220"));
+  assert.equal(mail.replyTo.address, lead.email);
+});
+test("lead email escapes HTML and honours WhatsApp contact permission", () => {
+  const mail = leadMail.buildLeadEmail({ ...lead, fullName: '<img src=x onerror="bad()">', message: "<script>bad()</script>", wantsWhatsapp: false });
+  assert.ok(!mail.html.includes("<script>bad()"));
+  assert.ok(!mail.html.includes("<img src=x"));
+  assert.ok(mail.html.includes("&lt;script&gt;"));
+  assert.ok(!mail.html.includes("https://wa.me/"));
+  assert.ok(mail.text.includes("WhatsApp iletişim izni: Hayır"));
+});

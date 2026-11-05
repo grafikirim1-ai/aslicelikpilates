@@ -1,109 +1,26 @@
-import { escapeHtml } from "@/lib/html";
 import { db } from "@/db";
-import { notifications, settings } from "@/db/schema";
+import { notifications } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import nodemailer from "nodemailer";
+import { buildLeadEmail, LEAD_RECIPIENT, type LeadEmailInput } from "@/lib/lead-email";
 
-async function studioEmail() {
+export async function queueLeadNotifications(input: LeadEmailInput) {
+  const mail = buildLeadEmail(input);
+  const [queued] = await db.insert(notifications).values({ channel: "email", recipient: LEAD_RECIPIENT, title: mail.subject.slice(0, 160), message: mail.text, eventType: "lead-created", status: "pending", relatedInquiryId: input.inquiryId }).returning({ id: notifications.id });
+  await db.insert(notifications).values({ channel: "dashboard", recipient: "asli-celik-pilates-panel", title: "Yeni ön görüşme talebi", message: `${input.fullName} adlı ziyaretçinin başvurusu alındı.`, eventType: "internal-alert", status: "logged", relatedInquiryId: input.inquiryId });
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    await db.update(notifications).set({ status: "unconfigured" }).where(eq(notifications.id, queued.id));
+    return { success: false, emailStatus: "unconfigured" };
+  }
   try {
-    const list = await db.select().from(settings).limit(1);
-    if (list[0]?.senderEmail) {
-      return list[0].senderEmail;
-    }
-  } catch (err) {}
-  return process.env.STUDIO_NOTIFICATION_EMAIL ?? "asliclk80@hotmail.com";
-}
-
-function studioWhatsapp() {
-  return process.env.STUDIO_NOTIFICATION_WHATSAPP ?? "+90 555 000 00 00";
-}
-
-export async function queueLeadNotifications(input: {
-  inquiryId: number;
-  fullName: string;
-  phone: string;
-  email: string;
-  goal: string;
-  preferredPackage?: string | null;
-  wantsWhatsapp: boolean;
-}) {
-  const leadReply = `Merhaba ${input.fullName}, Aslı Çelik Pilates ailesine hoş geldiniz. ${input.preferredPackage ? `${input.preferredPackage} için` : "Size uygun paket için"} en kısa sürede dönüş yapacağız.`;
-
-  const targetStudioEmail = await studioEmail();
-
-  // Try to send real email to studio if SMTP is configured
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-
-  let emailSent = false;
-  if (smtpHost && smtpUser && smtpPass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: Number(process.env.SMTP_PORT || 587),
-        secure: Number(process.env.SMTP_PORT) === 465,
-        auth: { user: smtpUser, pass: smtpPass },
-      });
-
-      await transporter.sendMail({
-        from: `"Aslı Çelik Pilates Web" <${smtpUser}>`,
-        to: targetStudioEmail,
-        subject: `Yeni Ücretsiz Ön Görüşme Talebi: ${input.fullName}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; background-color: #0a0f14; color: #f5f3f0; padding: 24px; border-radius: 12px;">
-            <h2 style="color: #c9a66b; margin-top: 0;">Yeni Web Sitesi Başvurusu</h2>
-            <p><strong>Ad Soyad:</strong> ${escapeHtml(input.fullName)}</p>
-            <p><strong>E-posta:</strong> ${escapeHtml(input.email)}</p>
-            <p><strong>Telefon:</strong> ${escapeHtml(input.phone)}</p>
-            <p><strong>Hedef:</strong> ${escapeHtml(input.goal)}</p>
-            <p><strong>Tercih Edilen Paket:</strong> ${escapeHtml(input.preferredPackage || "Belirtilmedi")}</p>
-            <p><strong>WhatsApp İletişim İzni:</strong> ${input.wantsWhatsapp ? "Evet" : "Hayır"}</p>
-          </div>
-        `,
-      });
-      emailSent = true;
-    } catch (err) {
-      console.error("Error sending lead notification email:", err);
-    }
+    const transporter = nodemailer.createTransport({ host: SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: Number(process.env.SMTP_PORT) === 465, auth: { user: SMTP_USER, pass: SMTP_PASS }, connectionTimeout: 10000, socketTimeout: 20000 });
+    await transporter.sendMail({ from: { name: "Aslı Çelik Pilates Web", address: SMTP_USER }, ...mail });
+    await db.update(notifications).set({ status: "sent" }).where(eq(notifications.id, queued.id));
+    return { success: true, emailStatus: "sent" };
+  } catch {
+    await db.update(notifications).set({ status: "failed" }).where(eq(notifications.id, queued.id));
+    console.error("Lead email delivery failed; inquiry retained", { inquiryId: input.inquiryId });
+    return { success: false, emailStatus: "failed" };
   }
-
-  const rows = [
-    {
-      channel: "email",
-      recipient: targetStudioEmail,
-      title: "Yeni web sitesi talebi",
-      message: `${input.fullName} yeni talep bıraktı. Telefon: ${input.phone}. E-posta: ${input.email}. Hedef: ${input.goal}. Paket: ${input.preferredPackage ?? "Belirtilmedi"}.`,
-      eventType: "lead-created",
-      status: emailSent ? "sent" : "demo-logged",
-      relatedInquiryId: input.inquiryId,
-    },
-    {
-      channel: "dashboard",
-      recipient: "asli-celik-pilates-panel",
-      title: "Yeni lead panelde hazır",
-      message: `${input.fullName} adlı ziyaretçi yönetim panelinde işlenmeyi bekliyor.`,
-      eventType: "internal-alert",
-      status: "logged",
-      relatedInquiryId: input.inquiryId,
-    },
-  ];
-
-  if (input.wantsWhatsapp) {
-    rows.push({
-      channel: "whatsapp",
-      recipient: input.phone || studioWhatsapp(),
-      title: "Ziyaretçi karşılama mesajı",
-      message: leadReply,
-      eventType: "lead-auto-reply",
-      status: process.env.STUDIO_NOTIFICATION_WHATSAPP ? "queued" : "demo-logged",
-      relatedInquiryId: input.inquiryId,
-    });
-  }
-
-  await db.insert(notifications).values(rows);
-
-  return {
-    success: true,
-    channels: rows.map((row) => row.channel),
-  };
 }

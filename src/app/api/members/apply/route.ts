@@ -1,3 +1,4 @@
+import { queueLeadNotifications } from "@/lib/notifications";
 import { db } from "@/db";
 import { inquiries } from "@/db/schema";
 import { trustedOrigin } from "@/lib/auth";
@@ -13,7 +14,9 @@ export async function POST(request: Request) {
     const contact = contactFields(body);
     const preferredPackage = field(body, "packageName", 120);
     const notes = field(body, "notes", 2000, false);
-    await db.insert(inquiries).values({ ...contact, preferredPackage, goal: "Üyelik ön başvurusu", message: notes || "Online üyelik ön başvurusu", source: "membership-application", status: "new", wantsWhatsapp: false });
+    const payload = { ...contact, preferredPackage, goal: "Üyelik ön başvurusu", message: notes || "Online üyelik ön başvurusu", source: "membership-application", status: "new", wantsWhatsapp: false };
+    const [created] = await db.insert(inquiries).values(payload).returning({ id: inquiries.id, createdAt: inquiries.createdAt });
+    try { await queueLeadNotifications({ inquiryId: created.id, createdAt: created.createdAt.toISOString(), ...payload }); } catch { console.error("Membership lead notification failed"); }
     return Response.json({ ok: true });
   } catch { return Response.json({ error: "Başvuru alınamadı. Bilgilerinizi kontrol edip tekrar deneyin." }, { status: 400 }); }
 }

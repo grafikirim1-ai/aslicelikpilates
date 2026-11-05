@@ -25,9 +25,11 @@ import {
 type AdminClientProps = {
   initialData: any;
   authenticated: boolean;
+  initialInquiryId?: number | null;
+  initialTab?: "members" | "inquiries";
 };
 
-export function AdminDashboardClient({ initialData, authenticated }: AdminClientProps) {
+export function AdminDashboardClient({ initialData, authenticated, initialInquiryId, initialTab = "members" }: AdminClientProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(authenticated);
   const isCheckingAuth = false;
 
@@ -84,7 +86,7 @@ export function AdminDashboardClient({ initialData, authenticated }: AdminClient
 
   const [activeTab, setActiveTab] = useState<
     "members" | "inquiries" | "sessions" | "packages" | "instructors" | "events" | "gallery" | "security"
-  >("members");
+  >(initialTab);
 
   const [membersList, setMembersList] = useState(initialData.allMembers || []);
   const [inquiriesList, setInquiriesList] = useState(initialData.recentInquiries || []);
@@ -186,6 +188,10 @@ export function AdminDashboardClient({ initialData, authenticated }: AdminClient
   const [editingPackage, setEditingPackage] = useState<any>(null);
   const [editingInstructor, setEditingInstructor] = useState<any>(null);
   const [editingMember, setEditingMember] = useState<any>(null);
+
+  useEffect(() => {
+    if (authenticated && initialInquiryId && activeTab === "inquiries") document.getElementById(`talep-${initialInquiryId}`)?.scrollIntoView({ block: "center" });
+  }, [authenticated, initialInquiryId, activeTab]);
 
   useEffect(() => {
     if (!authenticated) return;
@@ -1561,7 +1567,7 @@ export function AdminDashboardClient({ initialData, authenticated }: AdminClient
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {inquiriesList.map((item: any) => (
-                <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-4">
+                <div key={item.id} id={`talep-${item.id}`} className={`rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 space-y-4 ${initialInquiryId === item.id ? "ring-2 ring-[#c9a66b]" : ""}`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-serif text-lg text-white">{item.fullName}</h3>
