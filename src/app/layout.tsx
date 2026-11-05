@@ -18,9 +18,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ankara Fizyoterapist Destekli Pilates | Skolyoz, Bel Fıtığı, Fibromiyalji | Aslı Çelik Pilates",
-  description:
-    "Ankara’da fizyoterapist destekli Pilates dersleri. Skolyoz, bel ve boyun fıtığı, fibromiyalji, hamilelik ve duruş bozukluklarına yönelik kişiye özel Pilates programları. Güvenli, bilimsel ve profesyonel egzersiz yaklaşımı.",
+  metadataBase: new URL("https://www.aslicelikpilates.com"),
+  title: "Bağlıca Reformer Pilates | Aslı Çelik Pilates — Etimesgut Ankara",
+  description: "Ankara Etimesgut Bağlıca’da Aslı Çelik Pilates: fizyoterapist ve uzman eğitmen eşliğinde kişiye özel reformer pilates. Stüdyomuzla iletişime geçin.",
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    siteName: "Aslı Çelik Pilates",
+    title: "Aslı Çelik Pilates | Bağlıca Reformer Pilates",
+    description: "Etimesgut Bağlıca’da fizyoterapist ve uzman eğitmen eşliğinde kişiye özel pilates.",
+    images: [{ url: "/studio-hero.jpg", alt: "Aslı Çelik Pilates Bağlıca stüdyosu" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

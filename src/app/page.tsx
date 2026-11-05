@@ -1,8 +1,39 @@
+import { services } from "@/lib/services";
 import Link from "next/link";
 import Image from "next/image";
 import Navigation from "@/components/navigation";
 import { ContactForm } from "@/components/contact-form";
 import { getWebsiteData } from "@/lib/queries";
+
+export const metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "https://www.aslicelikpilates.com/", title: "Aslı Çelik Pilates | Bağlıca Reformer Pilates", images: ["/studio-hero.jpg"] },
+};
+
+const studioSchema = {
+  "@context": "https://schema.org",
+  "@type": "SportsActivityLocation",
+  "@id": "https://www.aslicelikpilates.com/#studio",
+  name: "Aslı Çelik Pilates",
+  url: "https://www.aslicelikpilates.com/",
+  image: "https://www.aslicelikpilates.com/studio-hero.jpg",
+  telephone: "+905432194220",
+  hasMap: "https://maps.app.goo.gl/xR6Jhn4L9X2uZpxZ6",
+  sameAs: ["https://maps.app.goo.gl/xR6Jhn4L9X2uZpxZ6"],
+  geo: { "@type": "GeoCoordinates", latitude: 39.8984137, longitude: 32.647539 },
+  email: "asliclk80@hotmail.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi",
+    addressLocality: "Etimesgut",
+    addressRegion: "Ankara",
+    addressCountry: "TR",
+  },
+  openingHoursSpecification: [
+    { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "09:00", closes: "21:00" },
+    { "@type": "OpeningHoursSpecification", dayOfWeek: "Saturday", opens: "09:00", closes: "13:00" },
+  ],
+};
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +54,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#000000] text-[#f5f3f0]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(studioSchema).replace(/</g, "\\u003c") }} />
       <Navigation />
 
       {/* Hero */}
@@ -510,7 +542,7 @@ export default async function HomePage() {
             </h2>
             <GoldLine />
             <p className="text-sm leading-relaxed text-[#e8e4dc]/60">
-              Etimesgut Bağlıca'daki butik stüdyomuzda hedeflerinize en kısa ve güvenli yoldan ulaşmanız için tasarlandı.
+              Etimesgut Bağlıca’daki butik stüdyomuzda hedeflerinize en kısa ve güvenli yoldan ulaşmanız için tasarlandı.
             </p>
           </div>
 
@@ -585,6 +617,16 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
+      <section className="border-t border-white/10 bg-[#050507] px-6 py-16 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="font-serif text-3xl text-[#c9a66b]">Bağlıca’da Pilates Programları</h2>
+          <div className="mt-7 grid gap-5 md:grid-cols-3">
+            {Object.entries(services).map(([slug, service]) => <Link key={slug} href={`/${slug}`} className="rounded-2xl border border-white/10 p-6 transition hover:border-[#c9a66b]/60"><h3 className="font-serif text-2xl">{service.title}</h3><p className="mt-3 text-sm leading-7 text-[#e8e4dc]/70">{service.description}</p><span className="mt-4 inline-block text-sm text-[#c9a66b]">Programı inceleyin →</span></Link>)}
+          </div>
+          <Link href="/iletisim-ve-konum" className="mt-7 inline-block text-sm text-[#c9a66b] underline">Stüdyo adresi, iletişim ve çalışma saatleri</Link>
+        </div>
+      </section>
+
       <footer className="border-t border-white/[0.06] bg-[#0a0f14]">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-12 lg:flex-row lg:items-end lg:px-10">
           <div className="space-y-3">
@@ -598,7 +640,7 @@ export default async function HomePage() {
               />
             </div>
             <p className="max-w-md text-sm leading-relaxed text-[#e8e4dc]/40">
-              Zarif, bilinçli ve sürdürülebilir bir pilates deneyimi için Etimesgut Bağlıca'da butik bir stüdyo.
+              Zarif, bilinçli ve sürdürülebilir bir pilates deneyimi için Etimesgut Bağlıca’da butik bir stüdyo.
             </p>
           </div>
           <div className="flex items-center gap-8 text-xs font-light tracking-wide text-[#e8e4dc]/30">

@@ -6,6 +6,7 @@ import { getWebsiteData } from "@/lib/queries";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
+  alternates: { canonical: "/galeri" },
   title: "Fotoğraf Albümü & Stüdyomuz | Aslı Çelik Pilates",
   description: "Aslı Çelik Pilates Etimesgut Bağlıca stüdyosu, reformer ekipmanları ve seans fotoğrafları.",
 };
@@ -27,7 +28,7 @@ export default async function GalleryPage() {
           </h1>
           <div className="mx-auto h-[1px] w-16 bg-gradient-to-r from-transparent via-[#c9a66b] to-transparent my-6" />
           <p className="max-w-xl mx-auto text-sm leading-[1.8] text-[#e8e4dc]/60">
-            Etimesgut Bağlıca'daki butik reformer pilates stüdyomuz, modern ekipmanlarımız ve seans anlarımızdan özenle seçilmiş kareler.
+            Etimesgut Bağlıca’daki butik reformer pilates stüdyomuz, modern ekipmanlarımız ve seans anlarımızdan özenle seçilmiş kareler.
           </p>
         </div>
       </section>

@@ -22,7 +22,7 @@ export default function Navigation() {
     { label: "Seanslar", href: "/#seanslar" },
     { label: "Hakkımızda", href: "/#hakkimizda" },
     { label: "Galeri", href: "/galeri" },
-    { label: "İletişim", href: "/#iletisim" },
+    { label: "İletişim", href: "/iletisim-ve-konum" },
     { label: "Üye Kaydı", href: "/uye-kayit" },
   ];
 
