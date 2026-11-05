@@ -55,7 +55,8 @@ export async function isAuthenticated() {
 export function trustedOrigin(request: Request) {
   const origin = request.headers.get("origin");
   const expected = process.env.NODE_ENV === "production" ? "https://www.aslicelikpilates.com" : new URL(request.url).origin;
-  return origin === expected;
+  const previewOrigin = process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+  return origin === expected || (previewOrigin !== null && origin === previewOrigin);
 }
 
 export async function requireAdmin(request: Request) {

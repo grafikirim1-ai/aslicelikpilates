@@ -71,7 +71,7 @@ export function AdminDashboardClient({ initialData, authenticated, initialInquir
   const [currentInstructorId, setCurrentInstructorId] = useState<number | null>(null);
 
   // Login form state
-  const [loginUsername, setLoginUsername] = useState("");
+  const [loginUsername, setLoginUsername] = useState("admin");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
