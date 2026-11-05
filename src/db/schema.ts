@@ -123,8 +123,8 @@ export const gallery = pgTable("acp_gallery", {
 
 export const adminUsers = pgTable("acp_admin_users", {
   id: serial("id").primaryKey(),
-  username: varchar("username", { length: 80 }).notNull().default("admin"),
-  password: varchar("password", { length: 160 }).notNull().default("admin"),
+  username: varchar("username", { length: 80 }).notNull(),
+  password: varchar("password", { length: 160 }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

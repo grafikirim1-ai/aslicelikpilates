@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { events, members } from "@/db/schema";
@@ -6,16 +7,20 @@ import { queueEventNotification } from "@/lib/email-service";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const list = await db.select().from(events).orderBy(desc(events.createdAt));
     return NextResponse.json({ ok: true, events: list });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Etkinlikler getirilemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const {
@@ -34,6 +39,10 @@ export async function POST(req: Request) {
         { error: "Etkinlik başlığı, açıklama, tarih ve saatler zorunludur." },
         { status: 400 }
       );
+    }
+
+    if ([title, description, eventDate, startTime, endTime].some((value) => typeof value !== "string") || title.length > 200 || description.length > 5000 || (location !== undefined && (typeof location !== "string" || location.length > 255)) || !["all", "selected"].includes(recipientType) || (recipientType === "selected" && (!Array.isArray(selectedMemberIds) || !selectedMemberIds.length || selectedMemberIds.length > 500 || selectedMemberIds.some((id: unknown) => !Number.isSafeInteger(id) || Number(id) <= 0)))) {
+      return NextResponse.json({ error: "Etkinlik ve alıcı bilgilerini kontrol edin." }, { status: 400 });
     }
 
     let targetMembers: any[] = [];
@@ -91,6 +100,6 @@ export async function POST(req: Request) {
       dispatchedLogs,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Etkinlik eklenemedi" }, { status: 500 });
+    return NextResponse.json({ error: "İşlem tamamlanamadı." }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
 import nodemailer from "nodemailer";
@@ -84,7 +85,7 @@ export function buildWelcomeHtml(params: WelcomeMemberParams): string {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">✨ Ailemize Hoş Geldiniz</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sevgili <span style="color: #c9a66b;">${memberName}</span>,
+                Sevgili <span style="color: #c9a66b;">${escapeHtml(memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
                 Stüdyomuza üyelik kaydınız başarıyla tamamlanmıştır. Sağlıklı bir beden, duruş düzeltme ve özel pilates yolculuğunuzda sizinle birlikte olmaktan mutluluk duyuyoruz.
@@ -94,9 +95,9 @@ export function buildWelcomeHtml(params: WelcomeMemberParams): string {
                 <tr>
                   <td style="padding: 20px;">
                     <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Üyelik Detaylarınız</p>
-                    <p style="margin: 0 0 4px 0; font-size: 16px; color: #ffffff;"><strong>Paketiniz:</strong> ${packageName}</p>
+                    <p style="margin: 0 0 4px 0; font-size: 16px; color: #ffffff;"><strong>Paketiniz:</strong> ${escapeHtml(packageName)}</p>
                     <p style="margin: 0 0 4px 0; font-size: 15px; color: #c9a66b;"><strong>Seans Hakkınız:</strong> ${totalSessions} Seans</p>
-                    ${instructorName ? `<p style="margin: 0; font-size: 14px; color: #f5f3f0;"><strong>Eğitmeniniz:</strong> ${instructorName}</p>` : ""}
+                    ${instructorName ? `<p style="margin: 0; font-size: 14px; color: #f5f3f0;"><strong>Eğitmeniniz:</strong> ${escapeHtml(instructorName)}</p>` : ""}
                   </td>
                 </tr>
               </table>
@@ -146,10 +147,10 @@ export function buildLowSessionsHtml(params: LowSessionsParams): string {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; font-weight: 600;">⚠️ Paket Yenileme & Seans Uyarısı</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sayın <span style="color: #c9a66b;">${memberName}</span>,
+                Sayın <span style="color: #c9a66b;">${escapeHtml(memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
-                <strong>${packageName}</strong> paketinizde seanslarınız bitmek üzere! Gelişimizin ve kas hafızanızın kesintiye uğramaması için yeni paket yüklemenizi önceden planlayabilirsiniz.
+                <strong>${escapeHtml(packageName)}</strong> paketinizde seanslarınız bitmek üzere! Gelişimizin ve kas hafızanızın kesintiye uğramaması için yeni paket yüklemenizi önceden planlayabilirsiniz.
               </p>
 
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; margin-bottom: 25px;">
@@ -208,7 +209,7 @@ export function buildSessionReminderHtml(params: SessionReminderParams): string 
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">⏰ Otomatik Seans Hatırlatması</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sayın <span style="color: #c9a66b;">${memberName}</span>,
+                Sayın <span style="color: #c9a66b;">${escapeHtml(memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
                 Bugün stüdyomuzda planlanmış reformer pilates seansınız bulunmaktadır. Ders saatinizden 10 dakika önce stüdyomuzda olmanızı rica ederiz.
@@ -221,22 +222,22 @@ export function buildSessionReminderHtml(params: SessionReminderParams): string 
                       <tr>
                         <td style="padding-bottom: 10px;">
                           <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Seans Programı:</span>
-                          <p style="margin: 3px 0 0 0; font-family: Georgia, serif; font-size: 19px; color: #ffffff;">${sessionTitle}</p>
+                          <p style="margin: 3px 0 0 0; font-family: Georgia, serif; font-size: 19px; color: #ffffff;">${escapeHtml(sessionTitle)}</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding-bottom: 10px;">
                           <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Tarih / Gün:</span>
-                          <p style="margin: 3px 0 0 0; font-size: 15px; color: #f5f3f0; font-weight: 500;">Bugün (${dayLabel})</p>
+                          <p style="margin: 3px 0 0 0; font-size: 15px; color: #f5f3f0; font-weight: 500;">Bugün (${escapeHtml(dayLabel)})</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding-bottom: 10px;">
                           <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Seans Saati:</span>
-                          <p style="margin: 3px 0 0 0; font-size: 20px; color: #c9a66b; font-weight: 600;">${startTime} — ${endTime}</p>
+                          <p style="margin: 3px 0 0 0; font-size: 20px; color: #c9a66b; font-weight: 600;">${escapeHtml(startTime)} — ${escapeHtml(endTime)}</p>
                         </td>
                       </tr>
-                      ${coachName ? `<tr><td><span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Eğitmeniniz:</span><p style="margin: 3px 0 0 0; font-size: 14px; color: #ffffff;">${coachName}</p></td></tr>` : ""}
+                      ${coachName ? `<tr><td><span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Eğitmeniniz:</span><p style="margin: 3px 0 0 0; font-size: 14px; color: #ffffff;">${escapeHtml(coachName)}</p></td></tr>` : ""}
                     </table>
                   </td>
                 </tr>
@@ -247,7 +248,7 @@ export function buildSessionReminderHtml(params: SessionReminderParams): string 
                   <td style="padding: 18px;">
                     <p style="margin: 0 0 4px 0; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Stüdyo Adresi & İletişim</p>
                     <p style="margin: 0 0 6px 0; font-size: 13px; color: #ffffff; line-height: 1.5;">
-                      ${location || "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara"}
+                      ${escapeHtml(location || "Bağlıca Mah. Bağlıca Bulvarı No:75/36 Yalınkılıç İş Merkezi, Etimesgut / Ankara")}
                     </p>
                     <p style="margin: 0; font-size: 12px; color: #c9a66b; font-weight: 500;">
                       İletişim Hattı: 0543 219 42 20
@@ -298,17 +299,17 @@ export function buildPaymentOverdueHtml(params: PaymentOverdueParams): string {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #f59e0b; font-weight: 600;">💳 Ödeme / Bakiye Hatırlatması</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sayın <span style="color: #c9a66b;">${memberName}</span>,
+                Sayın <span style="color: #c9a66b;">${escapeHtml(memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
-                Stüdyomuzdaki <strong>${packageName}</strong> üyelik paketinize ait kalan bakiye ödemeniz ile ilgili bilgilendirmedir.
+                Stüdyomuzdaki <strong>${escapeHtml(packageName)}</strong> üyelik paketinize ait kalan bakiye ödemeniz ile ilgili bilgilendirmedir.
               </p>
 
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; margin-bottom: 25px;">
                 <tr>
                   <td style="padding: 20px;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Bakiye Durumu:</p>
-                    <p style="margin: 0 0 4px 0; font-size: 15px; color: #ffffff;">Paket: ${packageName}</p>
+                    <p style="margin: 0 0 4px 0; font-size: 15px; color: #ffffff;">Paket: ${escapeHtml(packageName)}</p>
                     <p style="margin: 0 0 4px 0; font-size: 14px; color: #10b981;">Ödenen: ${paidAmount.toLocaleString("tr-TR")} TL / ${totalPrice.toLocaleString("tr-TR")} TL</p>
                     <p style="margin: 6px 0 0 0; font-size: 20px; color: #f59e0b; font-weight: 700;">Kalan Borç: ${remaining.toLocaleString("tr-TR")} TL</p>
                   </td>
@@ -497,7 +498,7 @@ export async function queueMemberApprovalNotification(params: {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #10b981; font-weight: 600;">✅ Kaydınız & Eğitmen Atamanız Onaylandı</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sayın <span style="color: #c9a66b;">${params.memberName}</span>,
+                Sayın <span style="color: #c9a66b;">${escapeHtml(params.memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
                 Stüdyomuza yaptığınız üyelik başvurusu ve kayıt onaylanmış olup kişisel reformer pilates eğitmeniniz atanmıştır!
@@ -507,8 +508,8 @@ export async function queueMemberApprovalNotification(params: {
                 <tr>
                   <td style="padding: 20px;">
                     <p style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Atama Bilgileri</p>
-                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Atanan Eğitmeniniz:</strong> <span style="color: #c9a66b;">${params.instructorName}</span></p>
-                    <p style="margin: 0; font-size: 14px; color: #f5f3f0;"><strong>Paketiniz:</strong> ${params.packageName}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Atanan Eğitmeniniz:</strong> <span style="color: #c9a66b;">${escapeHtml(params.instructorName)}</span></p>
+                    <p style="margin: 0; font-size: 14px; color: #f5f3f0;"><strong>Paketiniz:</strong> ${escapeHtml(params.packageName)}</p>
                   </td>
                 </tr>
               </table>
@@ -593,7 +594,7 @@ export async function queueInstructorAssignmentNotification(params: {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">🏋️‍♂️ Yeni Öğrenci Ataması</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Merhaba <span style="color: #c9a66b;">${params.instructorName}</span>,
+                Merhaba <span style="color: #c9a66b;">${escapeHtml(params.instructorName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
                 Stüdyo yönetimi tarafından kadronuza yeni bir pilates öğrencisi atanmıştır. Üye detayları aşağıdadır:
@@ -602,10 +603,10 @@ export async function queueInstructorAssignmentNotification(params: {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: rgba(201, 166, 107, 0.08); border: 1px solid rgba(201, 166, 107, 0.3); border-radius: 16px; margin-bottom: 25px;">
                 <tr>
                   <td style="padding: 20px;">
-                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Üye Adı:</strong> ${params.memberName}</p>
-                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>Telefon:</strong> ${params.memberPhone}</p>
-                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>Paket:</strong> ${params.packageName}</p>
-                    ${params.notes ? `<p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(232, 228, 220, 0.8); font-style: italic;"><strong>Sağlık / Seans Notu:</strong> "${params.notes}"</p>` : ""}
+                    <p style="margin: 0 0 6px 0; font-size: 18px; color: #ffffff;"><strong>Üye Adı:</strong> ${escapeHtml(params.memberName)}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>Telefon:</strong> ${escapeHtml(params.memberPhone)}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>Paket:</strong> ${escapeHtml(params.packageName)}</p>
+                    ${params.notes ? `<p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(232, 228, 220, 0.8); font-style: italic;"><strong>Sağlık / Seans Notu:</strong> "${escapeHtml(params.notes)}"</p>` : ""}
                   </td>
                 </tr>
               </table>
@@ -675,7 +676,7 @@ export async function queueEventNotification(params: {
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>${params.eventTitle} | Aslı Çelik Pilates Etkinlik Daveti</title>
+  <title>${escapeHtml(params.eventTitle)} | Aslı Çelik Pilates Etkinlik Daveti</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #050507; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #f5f3f0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #050507; padding: 40px 10px;">
@@ -692,7 +693,7 @@ export async function queueEventNotification(params: {
             <td style="padding: 35px 30px;">
               <p style="margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #c9a66b; font-weight: 600;">✨ Özel Etkinlik Davetiyesi</p>
               <h2 style="margin: 0 0 18px 0; font-family: Georgia, serif; font-size: 26px; color: #ffffff; font-weight: 300;">
-                Sayın <span style="color: #c9a66b;">${params.memberName}</span>,
+                Sayın <span style="color: #c9a66b;">${escapeHtml(params.memberName)}</span>,
               </h2>
               <p style="margin: 0 0 22px 0; font-size: 14px; line-height: 1.7; color: rgba(232, 228, 220, 0.75);">
                 Stüdyomuz bünyesinde düzenlenen özel etkinliğimize davetlisiniz! Etkinlik detayları aşağıda bilgilerinize sunulmuştur:
@@ -702,14 +703,14 @@ export async function queueEventNotification(params: {
                 <tr>
                   <td style="padding: 22px;">
                     <p style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #bfa38e;">Etkinlik Başlığı</p>
-                    <h3 style="margin: 0 0 15px 0; font-family: Georgia, serif; font-size: 22px; color: #ffffff;">${params.eventTitle}</h3>
+                    <h3 style="margin: 0 0 15px 0; font-family: Georgia, serif; font-size: 22px; color: #ffffff;">${escapeHtml(params.eventTitle)}</h3>
                     
-                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>🗓 Tarih:</strong> ${params.eventDate}</p>
-                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>⏰ Saat:</strong> ${params.startTime} — ${params.endTime}</p>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #f5f3f0;"><strong>📍 Konum:</strong> ${params.location}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #c9a66b;"><strong>🗓 Tarih:</strong> ${escapeHtml(params.eventDate)}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 14px; color: #f5f3f0;"><strong>⏰ Saat:</strong> ${escapeHtml(params.startTime)} — ${escapeHtml(params.endTime)}</p>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #f5f3f0;"><strong>📍 Konum:</strong> ${escapeHtml(params.location)}</p>
                     
                     <div style="border-top: 1px solid rgba(255,255,255,0.08); pt-12; margin-top: 12px; padding-top: 12px;">
-                      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: rgba(232, 228, 220, 0.85);">${params.description}</p>
+                      <p style="margin: 0; font-size: 13px; line-height: 1.6; color: rgba(232, 228, 220, 0.85);">${escapeHtml(params.description)}</p>
                     </div>
                   </td>
                 </tr>

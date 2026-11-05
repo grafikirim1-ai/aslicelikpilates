@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import { db } from "@/db";
 import { notifications, settings } from "@/db/schema";
 import nodemailer from "nodemailer";
@@ -51,11 +52,11 @@ export async function queueLeadNotifications(input: {
         html: `
           <div style="font-family: Arial, sans-serif; background-color: #0a0f14; color: #f5f3f0; padding: 24px; border-radius: 12px;">
             <h2 style="color: #c9a66b; margin-top: 0;">Yeni Web Sitesi Başvurusu</h2>
-            <p><strong>Ad Soyad:</strong> ${input.fullName}</p>
-            <p><strong>E-posta:</strong> ${input.email}</p>
-            <p><strong>Telefon:</strong> ${input.phone}</p>
-            <p><strong>Hedef:</strong> ${input.goal}</p>
-            <p><strong>Tercih Edilen Paket:</strong> ${input.preferredPackage || "Belirtilmedi"}</p>
+            <p><strong>Ad Soyad:</strong> ${escapeHtml(input.fullName)}</p>
+            <p><strong>E-posta:</strong> ${escapeHtml(input.email)}</p>
+            <p><strong>Telefon:</strong> ${escapeHtml(input.phone)}</p>
+            <p><strong>Hedef:</strong> ${escapeHtml(input.goal)}</p>
+            <p><strong>Tercih Edilen Paket:</strong> ${escapeHtml(input.preferredPackage || "Belirtilmedi")}</p>
             <p><strong>WhatsApp İletişim İzni:</strong> ${input.wantsWhatsapp ? "Evet" : "Hayır"}</p>
           </div>
         `,

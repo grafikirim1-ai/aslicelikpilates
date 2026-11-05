@@ -1,9 +1,12 @@
+import { requireAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { packages } from "@/db/schema";
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { name, description, sessionsCount, durationDays, price, focus, includes, isPopular } = body;
@@ -33,6 +36,8 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, name, description, sessionsCount, durationDays, price, focus, includes, isPopular, isActive } = body;
@@ -60,6 +65,8 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

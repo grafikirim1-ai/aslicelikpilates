@@ -6,7 +6,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:security": "node --test tests/security.test.mjs"
   },
   "dependencies": {
     "dotenv": "17.3.1",
